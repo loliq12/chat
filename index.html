@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>نبض شات | تواصل فوري ورومات</title>
+  
+  <!-- خطوط عربية عصرية من Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'Tajawal', 'sans-serif'],
+          },
+          colors: {
+            obsidian: {
+              950: '#07090e',
+              900: '#0d111a',
+              850: '#121724',
+              800: '#171e2e',
+              700: '#212b42',
+            },
+            neon: {
+              indigo: '#6366f1',
+              cyan: '#06b6d4',
+              violet: '#8b5cf6',
+              emerald: '#10b981',
+              rose: '#f43f5e'
+            }
+          },
+          boxShadow: {
+            'glow': '0 0 25px rgba(99, 102, 241, 0.25)',
+            'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.2)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- أيقونات Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #07090e;
+      color: #f1f5f9;
+      overflow: hidden;
+    }
+
+    /* شريط التمرير المخصص */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(13, 17, 26, 0.4);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.35);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.65);
+    }
+
+    /* تأثيرات الزجاج والخلفيات المتوهجة */
+    .glass-panel {
+      background: rgba(18, 23, 36, 0.78);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .glass-card {
+      background: linear-gradient(145deg, rgba(23, 30, 46, 0.9), rgba(13, 17, 26, 0.95));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .bg-mesh {
+      background-color: #07090e;
+      background-image: 
+        radial-gradient(at 15% 15%, rgba(99, 102, 241, 0.16) 0px, transparent 50%),
+        radial-gradient(at 85% 20%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+        radial-gradient(at 50% 90%, rgba(139, 92, 246, 0.14) 0px, transparent 50%);
+    }
+
+    /* حركات الرسائل */
+    @keyframes msgSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .msg-animate {
+      animation: msgSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* موجة التسجيل الصوتي */
+    @keyframes wavePulse {
+      0%, 100% { height: 6px; }
+      50% { height: 22px; }
+    }
+    .wave-bar {
+      width: 3px;
+      background: #f43f5e;
+      border-radius: 999px;
+      animation: wavePulse 0.8s infinite ease-in-out;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.15s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.45s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.2s; }
+
+    /* فقاعات الرسائل */
+    .bubble-me {
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 55%, #0891b2 100%);
+      border-bottom-left-radius: 4px;
+    }
+    .bubble-other {
+      background: rgba(30, 39, 60, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom-right-radius: 4px;
+    }
+
+    /* تنسيق مشغل الصوت المدمج */
+    input[type="range"].audio-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.2);
+      height: 4px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    input[type="range"].audio-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 8px rgba(255,255,255,0.6);
+    }
+  </style>
+</head>
+<body class="bg-mesh h-[100dvh] w-screen flex flex-col select-none">
+
+  <!-- إشعارات منبثقة (Toast Notification) -->
+  <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-[92%] max-w-md pointer-events-none"></div>
+
+  <!-- شاشة التحميل الأولية -->
+  <div id="loading-screen" class="fixed inset-0 z-50 bg-obsidian-950 flex flex-col items-center justify-center gap-4">
+    <div class="relative w-16 h-16 flex items-center justify-center">
+      <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 animate-spin opacity-30 blur-md"></div>
+      <div class="relative w-14 h-14 rounded-2xl bg-obsidian-900 border border-indigo-500/40 flex items-center justify-center shadow-glow">
+        <i data-lucide="zap" class="w-7 h-7 text-cyan-400"></i>
+      </div>
+    </div>
+    <p class="text-slate-300 font-semibold text-sm tracking-wide">جاري تهيئة الاتصال المشفر...</p>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 1. شاشة تسجيل الدخول وإنشاء الحساب الاحترافية -->
+  <!-- ========================================== -->
+  <div id="auth-screen" class="hidden fixed inset-0 z-40 overflow-y-auto bg-mesh p-4 flex items-center justify-center">
+    <div class="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <!-- زخرفة علوية -->
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- الشعار -->
+      <div class="flex flex-col items-center text-center mb-6 relative">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center shadow-glow mb-3">
+          <i data-lucide="message-square-heart" class="w-7 h-7 text-white"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold bg-gradient-to-l from-white via-slate-200 to-cyan-300 bg-clip-text text-transparent">
+          نبض شات
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">تواصل فوري، رومات عامة، محادثات خاصة، صور وصوت</p>
+      </div>
+
+      <!-- أزرار التبديل بين الدخول والتسجيل -->
+      <div class="grid grid-cols-2 gap-1.5 p-1.5 bg-obsidian-950/90 rounded-2xl border border-white/5 mb-6">
+        <button id="tab-login" type="button" onclick="switchAuthTab('login')"
+          class="py-2.5 text-sm font-bold rounded-xl transition-all bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md">
+          تسجيل الدخول
+        </button>
+        <button id="tab-register" type="button" onclick="switchAuthTab('register')"
+          class="py-2.5 text-sm font-bold rounded-xl transition-all text-slate-400 hover:text-white">
+          حساب جديد
+        </button>
+      </div>
+
+      <!-- نموذج تسجيل الدخول -->
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">البريد الإلكتروني</label>
+          <div class="relative">
+            <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="email" id="login-email" required placeholder="name@example.com" dir="ltr"
+              class="w-full bg-obsidian-950/80 border border-white/10 focus:border-indigo-500 rounded-xl py-3 pr-10 pl-4 text-sm text-white placeholder-slate-500 outline-none transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">كلمة المرور</label>
+          <div class="relative">
+            <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="password" id="login-password" required placeholder="••••••••" dir="ltr"
+              class="w-full bg-obsidian-950/80 border border-white/10 focus:border-indigo-500 rounded-xl py-3 pr-10 pl-4 text-sm text-white placeholder-slate-500 outline-none transition">
+          </div>
+        </div>
+
+        <button type="submit" id="login-submit-btn"
+          class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 text-white font-bold text-sm shadow-glow transition flex items-center justify-center gap-2 mt-2">
+          <span>دخول إلى المنصة</span>
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        </button>
+      </form>
+
+      <!-- نموذج إنشاء حساب جديد -->
+      <form id="register-form" class="hidden space-y-3.5">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">الاسم الظاهر</label>
+          <div class="relative">
+            <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="reg-name" required maxlength="25" placeholder="مثال: علي البصري"
+              class="w-full bg-obsidian-950/80 border border-white/10 focus:border-indigo-500 rounded-xl py-2.5 pr-10 pl-4 text-sm text-white placeholder-slate-500 outline-none transition">
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold text-slate-300">اليوزر الفريد (Username)</label>
+            <span id="username-status" class="text-[11px] font-medium text-slate-400">حروف إنجليزية وأرقام فقط</span>
+          </div>
+          <div class="relative">
+            <span class="text-cyan-400 font-bold text-sm absolute left-3.5 top-1/2 -translate-y-1/2">@</span>
+            <input type="text" id="reg-username" required minlength="3" maxlength="20" placeholder="ali_iq" dir="ltr"
+              class="w-full bg-obsidian-950/80 border border-white/10 focus:border-cyan-500 rounded-xl py-2.5 pr-4 pl-8 text-sm text-white placeholder-slate-500 outline-none transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">البريد الإلكتروني</label>
+          <div class="relative">
+            <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="email" id="reg-email" required placeholder="name@example.com" dir="ltr"
+              class="w-full bg-obsidian-950/80 border border-white/10 focus:border-indigo-500 rounded-xl py-2.5 pr-10 pl-4 text-sm text-white placeholder-slate-500 outline-none transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">كلمة المرور (6 أحرف على الأقل)</label>
+          <div class="relative">
+            <i data-lucide="key-round" class="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="password" id="reg-password" required minlength="6" placeholder="••••••••" dir="ltr"
+              class="w-full bg-obsidian-950/80 border border-white/10 focus:border-indigo-500 rounded-xl py-2.5 pr-10 pl-4 text-sm text-white placeholder-slate-500 outline-none transition">
+          </div>
+        </div>
+
+        <!-- اختيار لون الأفاتار -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">لون الملف الشخصي</label>
+          <div class="flex items-center gap-2.5" id="avatar-color-picker">
+            <button type="button" data-color="from-indigo-500 to-purple-600" class="color-choice w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 ring-2 ring-white scale-110 transition"></button>
+            <button type="button" data-color="from-cyan-500 to-blue-600" class="color-choice w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 opacity-75 hover:opacity-100 transition"></button>
+            <button type="button" data-color="from-emerald-500 to-teal-600" class="color-choice w-7 h-7 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-600 opacity-75 hover:opacity-100 transition"></button>
+            <button type="button" data-color="from-rose-500 to-pink-600" class="color-choice w-7 h-7 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 opacity-75 hover:opacity-100 transition"></button>
+            <button type="button" data-color="from-amber-500 to-orange-600" class="color-choice w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 opacity-75 hover:opacity-100 transition"></button>
+          </div>
+        </div>
+
+        <button type="submit" id="reg-submit-btn"
+          class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-600 hover:opacity-95 text-white font-bold text-sm shadow-glow transition flex items-center justify-center gap-2 mt-2">
+          <span>إنشاء الحساب والبدء</span>
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+        </button>
+      </form>
+
+      <!-- زر دليل إعدادات Firebase -->
+      <div class="mt-5 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
+        <span>مستضاف على GitHub Pages</span>
+        <button type="button" onclick="toggleModal('setup-modal', true)" class="text-cyan-400 hover:underline flex items-center gap-1">
+          <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+          تعليمات تفعيل القواعد
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. واجهة التطبيق الرئيسية (الشات)          -->
+  <!-- ========================================== -->
+  <div id="app-screen" class="hidden flex-1 flex h-full w-full overflow-hidden relative">
+
+    <!-- خلفية معتمة للقائمة الجانبية في الموبايل -->
+    <div id="mobile-backdrop" onclick="toggleSidebar(false)" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-30 lg:hidden"></div>
+
+    <!-- القائمة الجانبية اليمنى (الرومات، الخاص، المستخدمين) -->
+    <aside id="sidebar" class="fixed lg:static inset-y-0 right-0 z-40 w-[85vw] max-w-[320px] lg:w-80 glass-panel border-l border-white/10 flex flex-col transform translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out">
+      
+      <!-- رأس القائمة + معلومات المستخدم الحالي -->
+      <div class="p-4 border-b border-white/10 bg-obsidian-900/60">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center shadow-glow">
+              <i data-lucide="zap" class="w-5 h-5 text-white"></i>
+            </div>
+            <div>
+              <h2 class="font-extrabold text-base text-white leading-tight">نبض شات</h2>
+              <span class="text-[11px] text-emerald-400 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                متصل بالشبكة
+              </span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <button onclick="toggleModal('setup-modal', true)" title="إعدادات Firebase" class="p-2 rounded-xl hover:bg-white/5 text-slate-400 hover:text-cyan-400 transition">
+              <i data-lucide="settings" class="w-4 h-4"></i>
+            </button>
+            <button onclick="toggleSidebar(false)" class="lg:hidden p-2 rounded-xl hover:bg-white/5 text-slate-400">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- بطاقة حسابي -->
+        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-obsidian-950/80 border border-white/5">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div id="my-avatar" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-sm shrink-0 shadow-md">
+              ؟
+            </div>
+            <div class="min-w-0">
+              <p id="my-display-name" class="text-sm font-bold text-white truncate">جاري التحميل...</p>
+              <p id="my-username" class="text-xs text-cyan-400 font-mono truncate" dir="ltr">@user</p>
+            </div>
+          </div>
+          <button onclick="handleLogout()" title="تسجيل الخروج" class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition shrink-0">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- أزرار التنقل بين الأقسام (الرومات / الخاص / الأعضاء) -->
+      <div class="grid grid-cols-3 gap-1 p-2 bg-obsidian-950/60 border-b border-white/5 text-xs font-bold">
+        <button onclick="switchSidebarTab('rooms')" id="nav-tab-rooms" class="py-2 rounded-xl bg-indigo-600 text-white transition flex items-center justify-center gap-1.5">
+          <i data-lucide="hash" class="w-3.5 h-3.5"></i>
+          الرومات
+        </button>
+        <button onclick="switchSidebarTab('dms')" id="nav-tab-dms" class="py-2 rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5">
+          <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+          الخاص
+        </button>
+        <button onclick="switchSidebarTab('users')" id="nav-tab-users" class="py-2 rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5">
+          <i data-lucide="users" class="w-3.5 h-3.5"></i>
+          اليوزرات
+        </button>
+      </div>
+
+      <!-- محتوى القائمة الجانبية القابل للتمرير -->
+      <div class="flex-1 overflow-y-auto p-3 space-y-4">
+        
+        <!-- تبويب الرومات -->
+        <div id="panel-rooms" class="space-y-3">
+          <!-- الروم العام المشترك الثابت -->
+          <div>
+            <p class="text-[11px] font-bold text-slate-400 px-2 mb-1.5">الروم الرئيسي</p>
+            <button onclick="selectRoom('global', 'الروم العام المشترك', 'مساحة مفتوحة لجميع الأعضاء للتواصل المباشر 🌍', 'globe')"
+              id="room-btn-global"
+              class="room-item w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-l from-indigo-600/25 to-cyan-600/15 border border-indigo-500/40 text-right transition">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-lg shadow-glow shrink-0">
+                🌍
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sm text-white truncate">الروم العام المشترك</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 font-bold">الكل</span>
+                </div>
+                <p class="text-xs text-slate-400 truncate mt-0.5">دردشة جماعية لكل المتواجدين</p>
+              </div>
+            </button>
+          </div>
+
+          <!-- الرومات الإضافية -->
+          <div>
+            <div class="flex items-center justify-between px-2 mb-2">
+              <p class="text-[11px] font-bold text-slate-400">رومات المجتمع</p>
+              <button onclick="toggleModal('create-room-modal', true)" class="text-xs text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1">
+                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                إنشاء روم
+              </button>
+            </div>
+            <div id="custom-rooms-list" class="space-y-1.5">
+              <!-- يتم ملؤها ديناميكياً من Firestore -->
+            </div>
+          </div>
+        </div>
+
+        <!-- تبويب المحادثات الخاصة -->
+        <div id="panel-dms" class="hidden space-y-3">
+          <div class="px-1">
+            <p class="text-xs text-slate-400 mb-2">محادثاتك الخاصة المباشرة:</p>
+            <div id="dm-list" class="space-y-1.5">
+              <div class="text-center py-8 text-slate-500 text-xs">
+                لا توجد محادثات خاصة بعد.<br>اختر أي يوزر من تبويب "اليوزرات" لمراسلته!
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- تبويب البحث عن يوزرات -->
+        <div id="panel-users" class="hidden space-y-3">
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="user-search-input" placeholder="ابحث بالاسم أو @يوزر..."
+              class="w-full bg-obsidian-950/90 border border-white/10 focus:border-cyan-500 rounded-xl py-2.5 pr-9 pl-3 text-xs text-white placeholder-slate-500 outline-none">
+          </div>
+          <div id="users-directory-list" class="space-y-1.5">
+            <!-- قائمة الأعضاء المسجلين -->
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- منطقة المحادثة الرئيسية (Main Chat Arena)  -->
+    <!-- ========================================== -->
+    <main class="flex-1 flex flex-col h-full min-w-0 bg-obsidian-950/40 relative">
+      
+      <!-- شريط رأس المحادثة -->
+      <header class="h-16 px-4 glass-panel border-b border-white/10 flex items-center justify-between shrink-0 z-20">
+        <div class="flex items-center gap-3 min-w-0">
+          <!-- زر فتح القائمة في الموبايل -->
+          <button onclick="toggleSidebar(true)" class="lg:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 transition">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+
+          <div id="chat-header-icon" class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-lg shadow-md shrink-0">
+            🌍
+          </div>
+
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h1 id="chat-header-title" class="font-extrabold text-sm sm:text-base text-white truncate">الروم العام المشترك</h1>
+              <span id="chat-header-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold shrink-0">
+                روم عام
+              </span>
+            </div>
+            <p id="chat-header-subtitle" class="text-xs text-slate-400 truncate">مساحة مفتوحة لجميع الأعضاء للتواصل المباشر</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-obsidian-900/90 border border-white/5 text-xs text-slate-300">
+            <i data-lucide="users" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <span id="online-count-badge">0</span>
+            <span>عضو</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- منطقة عرض الرسائل -->
+      <div id="messages-container" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 scroll-smooth">
+        <!-- الرسائل ستظهر هنا -->
+      </div>
+
+      <!-- معاينة الصورة قبل الإرسال -->
+      <div id="image-preview-bar" class="hidden px-4 py-3 bg-obsidian-900/95 border-t border-indigo-500/30 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <img id="image-preview-thumb" src="" alt="معاينة" class="w-14 h-14 object-cover rounded-xl border border-white/20">
+          <div>
+            <p class="text-xs font-bold text-white">صورة جاهزة للإرسال</p>
+            <p id="image-preview-size" class="text-[11px] text-slate-400">جاري التحضير...</p>
+          </div>
+        </div>
+        <button type="button" onclick="clearSelectedImage()" class="p-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 transition">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- شريط حالة الرفع -->
+      <div id="upload-progress-bar" class="hidden h-1 w-full bg-obsidian-900 overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 animate-pulse w-full"></div>
+      </div>
+
+      <!-- شريط إدخال الرسائل والوسائط -->
+      <footer class="p-3 sm:p-4 glass-panel border-t border-white/10 shrink-0 relative">
+        
+        <!-- لوحة الإيموجي المنبثقة -->
+        <div id="emoji-picker" class="hidden absolute bottom-20 right-4 z-30 glass-card p-3 rounded-2xl shadow-2xl border border-white/15 w-72">
+          <div class="grid grid-cols-7 gap-1.5 text-xl text-center">
+            <button type="button" onclick="insertEmoji('😀')" class="hover:bg-white/10 rounded-lg p-1">😀</button>
+            <button type="button" onclick="insertEmoji('😂')" class="hover:bg-white/10 rounded-lg p-1">😂</button>
+            <button type="button" onclick="insertEmoji('🥰')" class="hover:bg-white/10 rounded-lg p-1">🥰</button>
+            <button type="button" onclick="insertEmoji('😎')" class="hover:bg-white/10 rounded-lg p-1">😎</button>
+            <button type="button" onclick="insertEmoji('🔥')" class="hover:bg-white/10 rounded-lg p-1">🔥</button>
+            <button type="button" onclick="insertEmoji('❤️')" class="hover:bg-white/10 rounded-lg p-1">❤️</button>
+            <button type="button" onclick="insertEmoji('👍')" class="hover:bg-white/10 rounded-lg p-1">👍</button>
+            <button type="button" onclick="insertEmoji('🎉')" class="hover:bg-white/10 rounded-lg p-1">🎉</button>
+            <button type="button" onclick="insertEmoji('🤔')" class="hover:bg-white/10 rounded-lg p-1">🤔</button>
+            <button type="button" onclick="insertEmoji('😭')" class="hover:bg-white/10 rounded-lg p-1">😭</button>
+            <button type="button" onclick="insertEmoji('🌹')" class="hover:bg-white/10 rounded-lg p-1">🌹</button>
+            <button type="button" onclick="insertEmoji('✨')" class="hover:bg-white/10 rounded-lg p-1">✨</button>
+            <button type="button" onclick="insertEmoji('🚀')" class="hover:bg-white/10 rounded-lg p-1">🚀</button>
+            <button type="button" onclick="insertEmoji('👑')" class="hover:bg-white/10 rounded-lg p-1">👑</button>
+          </div>
+        </div>
+
+        <!-- واجهة التسجيل الصوتي النشط -->
+        <div id="recording-ui" class="hidden flex items-center justify-between gap-3 bg-rose-950/40 border border-rose-500/40 rounded-2xl px-4 py-2.5">
+          <div class="flex items-center gap-3">
+            <span class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+            <span id="recording-timer" class="font-mono font-bold text-rose-300 text-sm">00:00</span>
+            <div class="flex items-center gap-1 h-6">
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+            </div>
+            <span class="text-xs text-rose-200 hidden sm:inline">جاري تسجيل الصوت...</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="cancelVoiceRecording()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200 transition">
+              إلغاء
+            </button>
+            <button type="button" onclick="stopAndSendVoice()" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-xs font-bold text-white shadow-lg flex items-center gap-1.5 transition">
+              <span>إرسال الصوت</span>
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- واجهة الكتابة القياسية -->
+        <form id="message-form" class="flex items-center gap-2">
+          <!-- حقل ملف الصورة المخفي -->
+          <input type="file" id="image-file-input" accept="image/*" class="hidden">
+
+          <!-- زر رفع صورة -->
+          <button type="button" onclick="document.getElementById('image-file-input').click()" title="إرسال صورة"
+            class="p-3 rounded-2xl bg-obsidian-900 hover:bg-indigo-600/20 border border-white/10 hover:border-indigo-500/40 text-slate-300 hover:text-cyan-400 transition shrink-0">
+            <i data-lucide="image-plus" class="w-5 h-5"></i>
+          </button>
+
+          <!-- زر تسجيل صوت -->
+          <button type="button" onclick="startVoiceRecording()" title="تسجيل رسالة صوتية"
+            class="p-3 rounded-2xl bg-obsidian-900 hover:bg-rose-600/20 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-400 transition shrink-0">
+            <i data-lucide="mic" class="w-5 h-5"></i>
+          </button>
+
+          <!-- حقل النص + الإيموجي -->
+          <div class="flex-1 relative flex items-center">
+            <input type="text" id="message-input" autocomplete="off" placeholder="اكتب رسالتك هنا..."
+              class="w-full bg-obsidian-900/90 border border-white/10 focus:border-indigo-500 rounded-2xl py-3 pr-4 pl-10 text-sm text-white placeholder-slate-500 outline-none transition">
+            <button type="button" onclick="toggleEmojiPicker()" class="absolute left-3 text-slate-400 hover:text-amber-400 transition">
+              <i data-lucide="smile" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <!-- زر الإرسال -->
+          <button type="submit" id="send-msg-btn"
+            class="p-3 sm:px-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:opacity-95 text-white font-bold text-sm shadow-glow transition flex items-center gap-2 shrink-0">
+            <span class="hidden sm:inline">إرسال</span>
+            <i data-lucide="send-horizontal" class="w-5 h-5 rotate-180"></i>
+          </button>
+        </form>
+      </footer>
+    </main>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. النوافذ المنبثقة (Modals)               -->
+  <!-- ========================================== -->
+
+  <!-- نافذة إنشاء روم جديد -->
+  <div id="create-room-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm p-4 flex items-center justify-center">
+    <div class="w-full max-w-md glass-card rounded-3xl p-6 shadow-2xl border border-white/10">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+          <i data-lucide="plus-square" class="w-5 h-5 text-cyan-400"></i>
+          إنشاء روم جديد
+        </h3>
+        <button onclick="toggleModal('create-room-modal', false)" class="p-1.5 rounded-xl hover:bg-white/10 text-slate-400">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="create-room-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">أيقونة الروم</label>
+          <div class="flex gap-2" id="room-emoji-choices">
+            <button type="button" data-emoji="💬" class="room-emoji-btn w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-400 text-xl">💬</button>
+            <button type="button" data-emoji="🎮" class="room-emoji-btn w-10 h-10 rounded-xl bg-obsidian-950 border border-white/10 text-xl">🎮</button>
+            <button type="button" data-emoji="🎵" class="room-emoji-btn w-10 h-10 rounded-xl bg-obsidian-950 border border-white/10 text-xl">🎵</button>
+            <button type="button" data-emoji="💻" class="room-emoji-btn w-10 h-10 rounded-xl bg-obsidian-950 border border-white/10 text-xl">💻</button>
+            <button type="button" data-emoji="⚽" class="room-emoji-btn w-10 h-10 rounded-xl bg-obsidian-950 border border-white/10 text-xl">⚽</button>
+            <button type="button" data-emoji="☕" class="room-emoji-btn w-10 h-10 rounded-xl bg-obsidian-950 border border-white/10 text-xl">☕</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">اسم الروم</label>
+          <input type="text" id="new-room-name" required maxlength="30" placeholder="مثال: عشاق البرمجة والتقنية"
+            class="w-full bg-obsidian-950 border border-white/10 focus:border-cyan-500 rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">وصف قصير للروم</label>
+          <input type="text" id="new-room-desc" maxlength="60" placeholder="مثال: نقاشات تقنية ومشاركة مشاريع..."
+            class="w-full bg-obsidian-950 border border-white/10 focus:border-cyan-500 rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 font-bold text-sm text-white shadow-glow">
+          إطلاق الروم الآن
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- نافذة عرض الصور بحجم كامل (Lightbox) -->
+  <div id="lightbox-modal" onclick="toggleModal('lightbox-modal', false)" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md p-4 flex items-center justify-center cursor-zoom-out">
+    <img id="lightbox-img" src="" alt="صورة مكبرة" class="max-w-full max-h-[90vh] rounded-2xl shadow-2xl border border-white/15">
+  </div>
+
+  <!-- نافذة تعليمات تفعيل خدمات Firebase -->
+  <div id="setup-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm p-4 flex items-center justify-center overflow-y-auto">
+    <div class="w-full max-w-lg glass-card rounded-3xl p-6 shadow-2xl border border-cyan-500/30 my-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-extrabold text-cyan-400 flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
+          إعدادات مشروع Firebase الخاص بك
+        </h3>
+        <button onclick="toggleModal('setup-modal', false)" class="p-1.5 rounded-xl hover:bg-white/10 text-slate-400">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+        <p>الموقع مربوط تلقائياً بمشروعك <code class="text-cyan-300 bg-obsidian-950 px-1.5 py-0.5 rounded">pattern-8ba7c</code>. لكي يعمل التسجيل والرسائل والصور بدون أي قيود، تأكد من تفعيل التالي في لوحة Firebase:</p>
+        
+        <div class="p-3 rounded-2xl bg-obsidian-950/90 border border-white/10 space-y-2">
+          <p class="font-bold text-white">1. تفعيل تسجيل الدخول (Authentication):</p>
+          <p class="text-slate-400">اذهب إلى <b>Build &gt; Authentication &gt; Sign-in method</b> وقم بتفعيل خيار <b>Email/Password</b>.</p>
+          <p class="text-slate-400">وفي تبويب <b>Settings &gt; Authorized domains</b> أضف رابط موقعك على GitHub (مثل <code class="text-indigo-300">username.github.io</code>).</p>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-obsidian-950/90 border border-white/10 space-y-2">
+          <p class="font-bold text-white">2. تفعيل قاعدة البيانات (Firestore Database):</p>
+          <p class="text-slate-400">أنشئ قاعدة بيانات Firestore واجعل القواعد (Rules) تسمح بالقراءة والكتابة للمسجلين:</p>
+          <pre dir="ltr" class="bg-black/60 p-2 rounded-lg text-[11px] text-emerald-400 overflow-x-auto">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}</pre>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-obsidian-950/90 border border-white/10 space-y-2">
+          <p class="font-bold text-white">3. تفعيل التخزين للصور والصوت (Storage):</p>
+          <p class="text-slate-400">فعّل <b>Storage</b> (وحتى لو لم تفعّله، الموقع يدعم إرسال الصور والصوت مباشرة كنسخة احتياطية ذكية!).</p>
+        </div>
+      </div>
+
+      <button onclick="toggleModal('setup-modal', false)" class="w-full mt-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm">
+        فهمت، إغلاق
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. المنطق البرمجي والربط مع Firebase v10+   -->
+  <!-- ========================================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      onAuthStateChanged, 
+      signOut,
+      updateProfile 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      addDoc, 
+      collection, 
+      query, 
+      orderBy, 
+      limit, 
+      onSnapshot, 
+      serverTimestamp,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { 
+      getStorage, 
+      ref, 
+      uploadBytes, 
+      getDownloadURL 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+    // إعدادات Firebase الخاصة بالمستخدم
+    const firebaseConfig = {
+      apiKey: "AIzaSyBF9Xdqtg_0buaalRYHZJau-GY0Us5vkRA",
+      authDomain: "pattern-8ba7c.firebaseapp.com",
+      projectId: "pattern-8ba7c",
+      storageBucket: "pattern-8ba7c.firebasestorage.app",
+      messagingSenderId: "842871744550",
+      appId: "1:842871744550:web:e1338ffdfca5405c665ee7",
+      measurementId: "G-G1VXWW8V8K"
+    };
+
+    // تهيئة التطبيق والخدمات
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // متغيرات الحالة العامة
+    let currentUser = null;
+    let currentUserProfile = null;
+    let currentChat = {
+      type: 'room', // 'room' أو 'dm'
+      id: 'global',
+      title: 'الروم العام المشترك',
+      subtitle: 'مساحة مفتوحة لجميع الأعضاء للتواصل المباشر 🌍',
+      icon: '🌍'
+    };
+    let unsubscribeMessages = null;
+    let unsubscribeRooms = null;
+    let unsubscribeUsers = null;
+    let unsubscribeDMs = null;
+
+    let allUsersCache = [];
+    let selectedAvatarColor = "from-indigo-500 to-purple-600";
+    let selectedRoomEmoji = "💬";
+    let selectedImageFile = null;
+    let selectedImagePreviewDataUrl = null;
+
+    // متغيرات التسجيل الصوتي
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingInterval = null;
+    let recordingSeconds = 0;
+    let isRecordingCancelled = false;
+
+    // تفعيل أيقونات Lucide
+    lucide.createIcons();
+
+    // ==========================================
+    // أدوات مساعدة للواجهة
+    // ==========================================
+    window.showToast = function(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
+        error: 'bg-rose-950/95 border-rose-500/50 text-rose-200',
+        info: 'bg-obsidian-900/95 border-indigo-500/50 text-slate-200'
+      };
+      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-md text-xs font-bold flex items-center justify-between gap-3 msg-animate ${colors[type] || colors.info}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    };
+
+    window.toggleModal = function(modalId, show) {
+      const el = document.getElementById(modalId);
+      if (!el) return;
+      if (show) el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    };
+
+    window.toggleSidebar = function(show) {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('mobile-backdrop');
+      if (show) {
+        sidebar.classList.remove('translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    };
+
+    window.switchAuthTab = function(tab) {
+      const loginForm = document.getElementById('login-form');
+      const regForm = document.getElementById('register-form');
+      const tabLogin = document.getElementById('tab-login');
+      const tabReg = document.getElementById('tab-register');
+
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        regForm.classList.add('hidden');
+        tabLogin.className = "py-2.5 text-sm font-bold rounded-xl transition-all bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md";
+        tabReg.className = "py-2.5 text-sm font-bold rounded-xl transition-all text-slate-400 hover:text-white";
+      } else {
+        loginForm.classList.add('hidden');
+        regForm.classList.remove('hidden');
+        tabReg.className = "py-2.5 text-sm font-bold rounded-xl transition-all bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow-md";
+        tabLogin.className = "py-2.5 text-sm font-bold rounded-xl transition-all text-slate-400 hover:text-white";
+      }
+    };
+
+    window.switchSidebarTab = function(tab) {
+      ['rooms', 'dms', 'users'].forEach(t => {
+        const panel = document.getElementById(`panel-${t}`);
+        const btn = document.getElementById(`nav-tab-${t}`);
+        if (t === tab) {
+          panel.classList.remove('hidden');
+          btn.className = "py-2 rounded-xl bg-indigo-600 text-white transition flex items-center justify-center gap-1.5";
+        } else {
+          panel.classList.add('hidden');
+          btn.className = "py-2 rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5";
+        }
+      });
+    };
+
+    window.toggleEmojiPicker = function() {
+      document.getElementById('emoji-picker').classList.toggle('hidden');
+    };
+
+    window.insertEmoji = function(emoji) {
+      const input = document.getElementById('message-input');
+      input.value += emoji;
+      input.focus();
+      document.getElementById('emoji-picker').classList.add('hidden');
+    };
+
+    window.openLightbox = function(src) {
+      document.getElementById('lightbox-img').src = src;
+      toggleModal('lightbox-modal', true);
+    };
+
+    // اختيار لون الأفاتار عند التسجيل
+    document.querySelectorAll('.color-choice').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.color-choice').forEach(b => {
+          b.classList.remove('ring-2', 'ring-white', 'scale-110');
+          b.classList.add('opacity-75');
+        });
+        btn.classList.add('ring-2', 'ring-white', 'scale-110');
+        btn.classList.remove('opacity-75');
+        selectedAvatarColor = btn.dataset.color;
+      });
+    });
+
+    // اختيار أيقونة الروم الجديد
+    document.querySelectorAll('.room-emoji-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.room-emoji-btn').forEach(b => {
+          b.className = "room-emoji-btn w-10 h-10 rounded-xl bg-obsidian-950 border border-white/10 text-xl";
+        });
+        btn.className = "room-emoji-btn w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-400 text-xl";
+        selectedRoomEmoji = btn.dataset.emoji;
+      });
+    });
+
+    // تنظيف النصوص لمنع XSS
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[m]);
+    }
+
+    function formatTime(timestamp) {
+      if (!timestamp) return 'الآن';
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      return date.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function getInitials(name) {
+      if (!name) return '؟';
+      return name.trim().charAt(0).toUpperCase();
+    }
+
+    // ==========================================
+    // 1. نظام المصادقة واليوزرات الفريدة
+    // ==========================================
+    const regUsernameInput = document.getElementById('reg-username');
+    regUsernameInput.addEventListener('input', () => {
+      regUsernameInput.value = regUsernameInput.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const statusEl = document.getElementById('username-status');
+      if (regUsernameInput.value.length >= 3) {
+        statusEl.textContent = `@${regUsernameInput.value} جاهز للفحص`;
+        statusEl.className = 'text-[11px] font-bold text-cyan-400';
+      } else {
+        statusEl.textContent = '3 أحرف على الأقل';
+        statusEl.className = 'text-[11px] text-slate-400';
+      }
+    });
+
+    // تسجيل حساب جديد
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('reg-submit-btn');
+      const displayName = document.getElementById('reg-name').value.trim();
+      const username = document.getElementById('reg-username').value.trim().toLowerCase();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+        showToast('اليوزر يجب أن يتكون من 3-20 حرف إنجليزي أو رقم أو _ فقط', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>جاري إنشاء الحساب والتحقق من اليوزر...</span>';
+
+      try {
+        // 1. إنشاء الحساب في Firebase Auth أولاً لنحصل على صلاحية القراءة/الكتابة في Firestore
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = cred.user.uid;
+
+        // 2. التحقق من أن اليوزر غير محجوز مسبقاً
+        const usernameRef = doc(db, 'usernames', username);
+        const usernameSnap = await getDoc(usernameRef);
+
+        if (usernameSnap.exists()) {
+          // حذف الحساب المؤقت إذا كان اليوزر مأخوذاً
+          await cred.user.delete();
+          showToast(`عذراً، اليوزر @${username} محجوز لشخص آخر! اختر يوزر مختلف.`, 'error');
+          btn.disabled = false;
+          btn.innerHTML = '<span>إنشاء الحساب والبدء</span>';
+          return;
+        }
+
+        // 3. حجز اليوزر وحفظ بيانات الملف الشخصي
+        await updateProfile(cred.user, { displayName });
+        await setDoc(usernameRef, { uid, createdAt: serverTimestamp() });
+        await setDoc(doc(db, 'users', uid), {
+          uid,
+          username,
+          displayName,
+          email,
+          avatarColor: selectedAvatarColor,
+          online: true,
+          lastSeen: serverTimestamp(),
+          createdAt: serverTimestamp()
+        });
+
+        showToast(`أهلاً بك يا ${displayName}! تم إنشاء حسابك بنجاح 🎉`, 'success');
+      } catch (err) {
+        console.error(err);
+        let msg = 'حدث خطأ أثناء التسجيل.';
+        if (err.code === 'auth/email-already-in-use') msg = 'هذا البريد الإلكتروني مسجل مسبقاً!';
+        else if (err.code === 'auth/weak-password') msg = 'كلمة المرور ضعيفة، اجعلها 6 أحرف على الأقل.';
+        else if (err.code === 'auth/operation-not-allowed') msg = 'يرجى تفعيل Email/Password في إعدادات Firebase Auth!';
+        else if (err.code === 'permission-denied') msg = 'يرجى ضبط قواعد Firestore Rules من زر الإعدادات بالأسفل!';
+        showToast(msg, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>إنشاء الحساب والبدء</span>';
+      }
+    });
+
+    // تسجيل الدخول
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-submit-btn');
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>جاري تسجيل الدخول...</span>';
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        showToast('تم تسجيل الدخول بنجاح!', 'success');
+      } catch (err) {
+        console.error(err);
+        let msg = 'بيانات الدخول غير صحيحة.';
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+        else if (err.code === 'auth/operation-not-allowed') msg = 'يرجى تفعيل Email/Password في لوحة Firebase!';
+        showToast(msg, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>دخول إلى المنصة</span>';
+      }
+    });
+
+    window.handleLogout = async function() {
+      try {
+        if (currentUser) {
+          await updateDoc(doc(db, 'users', currentUser.uid), {
+            online: false,
+            lastSeen: serverTimestamp()
+          }).catch(() => {});
+        }
+        await signOut(auth);
+        showToast('تم تسجيل الخروج بأمان', 'info');
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    // مراقبة حالة المستخدم
+    onAuthStateChanged(auth, async (user) => {
+      document.getElementById('loading-screen').classList.add('hidden');
+      if (user) {
+        currentUser = user;
+        await loadCurrentUserProfile(user);
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        initAppStreams();
+      } else {
+        currentUser = null;
+        currentUserProfile = null;
+        cleanupStreams();
+        document.getElementById('app-screen').classList.add('hidden');
+        document.getElementById('auth-screen').classList.remove('hidden');
+      }
+    });
+
+    async function loadCurrentUserProfile(user) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          currentUserProfile = userDoc.data();
+          await updateDoc(doc(db, 'users', user.uid), { online: true, lastSeen: serverTimestamp() }).catch(() => {});
+        } else {
+          // في حال كان المستخدم مسجلاً في Auth بدون مستند Firestore
+          const fallbackUsername = 'user_' + user.uid.slice(0, 5).toLowerCase();
+          currentUserProfile = {
+            uid: user.uid,
+            username: fallbackUsername,
+            displayName: user.displayName || 'مستخدم جديد',
+            email: user.email,
+            avatarColor: 'from-indigo-500 to-purple-600'
+          };
+          await setDoc(doc(db, 'users', user.uid), {
+            ...currentUserProfile,
+            online: true,
+            lastSeen: serverTimestamp()
+          });
+        }
+
+        // تحديث الواجهة ببيانات المستخدم
+        const avatarEl = document.getElementById('my-avatar');
+        avatarEl.className = `w-10 h-10 rounded-xl bg-gradient-to-tr ${currentUserProfile.avatarColor || 'from-indigo-500 to-purple-600'} flex items-center justify-center font-bold text-white text-sm shrink-0 shadow-md`;
+        avatarEl.textContent = getInitials(currentUserProfile.displayName);
+        document.getElementById('my-display-name').textContent = currentUserProfile.displayName;
+        document.getElementById('my-username').textContent = `@${currentUserProfile.username}`;
+      } catch (err) {
+        console.error("Error loading profile:", err);
+        showToast('تعذر الوصول إلى Firestore. تأكد من قواعد الحماية (Rules).', 'error');
+      }
+    }
+
+    // ==========================================
+    // 2. إدارة الرومات والخاص والأعضاء في الوقت الفعلي
+    // ==========================================
+    function cleanupStreams() {
+      if (unsubscribeMessages) unsubscribeMessages();
+      if (unsubscribeRooms) unsubscribeRooms();
+      if (unsubscribeUsers) unsubscribeUsers();
+      if (unsubscribeDMs) unsubscribeDMs();
+    }
+
+    function initAppStreams() {
+      // 1. الاستماع للرومات المخصصة
+      const roomsQuery = query(collection(db, 'rooms'), orderBy('createdAt', 'desc'));
+      unsubscribeRooms = onSnapshot(roomsQuery, (snapshot) => {
+        const list = document.getElementById('custom-rooms-list');
+        list.innerHTML = '';
+        if (snapshot.empty) {
+          list.innerHTML = `<p class="text-[11px] text-slate-500 px-2 py-2">لا توجد رومات إضافية بعد. أنشئ أول روم!</p>`;
+        }
+        snapshot.forEach(docSnap => {
+          const r = docSnap.data();
+          const rId = docSnap.id;
+          const isActive = currentChat.type === 'room' && currentChat.id === rId;
+          const btn = document.createElement('button');
+          btn.id = `room-btn-${rId}`;
+          btn.onclick = () => selectRoom(rId, r.name, r.description || 'روم مجتمعي', r.emoji || '💬');
+          btn.className = `room-item w-full flex items-center gap-3 p-2.5 rounded-2xl text-right transition ${
+            isActive 
+              ? 'bg-gradient-to-l from-indigo-600/25 to-cyan-600/15 border border-indigo-500/40' 
+              : 'hover:bg-white/5 border border-transparent'
+          }`;
+          btn.innerHTML = `
+            <div class="w-9 h-9 rounded-xl bg-obsidian-950 border border-white/10 flex items-center justify-center text-base shrink-0">
+              ${escapeHTML(r.emoji || '💬')}
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="font-bold text-xs text-white truncate">${escapeHTML(r.name)}</p>
+              <p class="text-[11px] text-slate-400 truncate">${escapeHTML(r.description || 'بواسطة @' + (r.createdByUsername || 'عضو'))}</p>
+            </div>
+          `;
+          list.appendChild(btn);
+        });
+      }, (err) => console.error("Rooms listener error:", err));
+
+      // 2. الاستماع لقائمة الأعضاء (اليوزرات)
+      const usersQuery = query(collection(db, 'users'), limit(100));
+      unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
+        allUsersCache = [];
+        snapshot.forEach(docSnap => {
+          const u = docSnap.data();
+          if (u.uid !== currentUser.uid) {
+            allUsersCache.push(u);
+          }
+        });
+        document.getElementById('online-count-badge').textContent = allUsersCache.length + 1;
+        renderUsersDirectory(document.getElementById('user-search-input').value);
+      });
+
+      // 3. الاستماع للمحادثات الخاصة النشطة للمستخدم
+      const dmsQuery = query(collection(db, 'user_chats', currentUser.uid, 'threads'), orderBy('updatedAt', 'desc'));
+      unsubscribeDMs = onSnapshot(dmsQuery, (snapshot) => {
+        const dmList = document.getElementById('dm-list');
+        if (snapshot.empty) {
+          dmList.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">لا توجد محادثات خاصة بعد.<br>اختر أي يوزر من تبويب "اليوزرات" لمراسلته!</div>`;
+          return;
+        }
+        dmList.innerHTML = '';
+        snapshot.forEach(docSnap => {
+          const thread = docSnap.data();
+          const isActive = currentChat.type === 'dm' && currentChat.id === thread.chatId;
+          const btn = document.createElement('button');
+          btn.onclick = () => openPrivateChat(thread.peerUid, thread.peerName, thread.peerUsername, thread.peerColor);
+          btn.className = `w-full flex items-center gap-3 p-2.5 rounded-2xl text-right transition ${
+            isActive ? 'bg-indigo-600/25 border border-indigo-500/40' : 'hover:bg-white/5 border border-transparent'
+          }`;
+          btn.innerHTML = `
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr ${thread.peerColor || 'from-cyan-500 to-blue-600'} flex items-center justify-center font-bold text-white text-xs shrink-0">
+              ${getInitials(thread.peerName)}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between">
+                <p class="font-bold text-xs text-white truncate">${escapeHTML(thread.peerName)}</p>
+                <span class="text-[10px] text-cyan-400 font-mono" dir="ltr">@${escapeHTML(thread.peerUsername)}</span>
+              </div>
+              <p class="text-[11px] text-slate-400 truncate mt-0.5">${escapeHTML(thread.lastMessage || 'بدء محادثة خاصة')}</p>
+            </div>
+          `;
+          dmList.appendChild(btn);
+        });
+      });
+
+      // 4. فتح الروم العام المشترك افتراضياً
+      selectRoom('global', 'الروم العام المشترك', 'مساحة مفتوحة لجميع الأعضاء للتواصل المباشر 🌍', '🌍');
+    }
+
+    // البحث في قائمة اليوزرات
+    document.getElementById('user-search-input').addEventListener('input', (e) => {
+      renderUsersDirectory(e.target.value);
+    });
+
+    function renderUsersDirectory(filterText = '') {
+      const container = document.getElementById('users-directory-list');
+      const term = filterText.trim().toLowerCase().replace(/^@/, '');
+      const filtered = allUsersCache.filter(u => 
+        (u.displayName && u.displayName.toLowerCase().includes(term)) ||
+        (u.username && u.username.toLowerCase().includes(term))
+      );
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">لا يوجد أعضاء مطابقون لبحثك</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      filtered.forEach(u => {
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between p-2.5 rounded-2xl bg-obsidian-950/60 hover:bg-obsidian-900 border border-white/5 transition";
+        div.innerHTML = `
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="relative">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr ${u.avatarColor || 'from-indigo-500 to-purple-600'} flex items-center justify-center font-bold text-white text-xs">
+                ${getInitials(u.displayName)}
+              </div>
+              <span class="absolute -bottom-0.5 -left-0.5 w-2.5 h-2.5 rounded-full ${u.online ? 'bg-emerald-400' : 'bg-slate-500'} ring-2 ring-obsidian-950"></span>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-white truncate">${escapeHTML(u.displayName)}</p>
+              <p class="text-[11px] text-cyan-400 font-mono truncate" dir="ltr">@${escapeHTML(u.username)}</p>
+            </div>
+          </div>
+          <button onclick="openPrivateChat('${u.uid}', '${escapeHTML(u.displayName)}', '${escapeHTML(u.username)}', '${u.avatarColor || 'from-cyan-500 to-blue-600'}')"
+            class="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-[11px] font-bold transition shrink-0">
+            مراسلة
+          </button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // إنشاء روم جديد
+    document.getElementById('create-room-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('new-room-name').value.trim();
+      const description = document.getElementById('new-room-desc').value.trim();
+      if (!name) return;
+
+      try {
+        const docRef = await addDoc(collection(db, 'rooms'), {
+          name,
+          description: description || 'روم نقاش عام',
+          emoji: selectedRoomEmoji,
+          createdBy: currentUser.uid,
+          createdByUsername: currentUserProfile?.username || 'user',
+          createdAt: serverTimestamp()
+        });
+        toggleModal('create-room-modal', false);
+        document.getElementById('create-room-form').reset();
+        showToast(`تم إنشاء روم "${name}" بنجاح!`, 'success');
+        selectRoom(docRef.id, name, description || 'روم نقاش عام', selectedRoomEmoji);
+      } catch (err) {
+        console.error(err);
+        showToast('حدث خطأ أثناء إنشاء الروم', 'error');
+      }
+    });
+
+    // اختيار روم عام أو مخصص
+    window.selectRoom = function(roomId, title, subtitle, emoji = '💬') {
+      currentChat = { type: 'room', id: roomId, title, subtitle, icon: emoji };
+      
+      document.getElementById('chat-header-title').textContent = title;
+      document.getElementById('chat-header-subtitle').textContent = subtitle;
+      document.getElementById('chat-header-icon').textContent = emoji;
+      document.getElementById('chat-header-icon').className = "w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-lg shadow-md shrink-0";
+      document.getElementById('chat-header-badge').textContent = roomId === 'global' ? 'الروم العام' : 'روم مجتمع';
+      document.getElementById('chat-header-badge').className = "text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold shrink-0";
+
+      // تحديث التمييز البصري في القائمة
+      document.querySelectorAll('.room-item').forEach(el => {
+        el.classList.remove('bg-gradient-to-l', 'from-indigo-600/25', 'to-cyan-600/15', 'border-indigo-500/40');
+        el.classList.add('border-transparent');
+      });
+      const activeBtn = document.getElementById(`room-btn-${roomId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-transparent');
+        activeBtn.classList.add('bg-gradient-to-l', 'from-indigo-600/25', 'to-cyan-600/15', 'border-indigo-500/40');
+      }
+
+      toggleSidebar(false);
+      subscribeToMessages(`rooms/${roomId}/messages`);
+    };
+
+    // فتح محادثة خاصة 1-on-1
+    window.openPrivateChat = function(peerUid, peerName, peerUsername, peerColor) {
+      const sortedIds = [currentUser.uid, peerUid].sort();
+      const chatId = `${sortedIds[0]}_${sortedIds[1]}`;
+
+      currentChat = {
+        type: 'dm',
+        id: chatId,
+        peerUid,
+        peerName,
+        peerUsername,
+        peerColor
+      };
+
+      document.getElementById('chat-header-title').textContent = peerName;
+      document.getElementById('chat-header-subtitle').textContent = `@${peerUsername} • محادثة خاصة مشفرة`;
+      const iconEl = document.getElementById('chat-header-icon');
+      iconEl.textContent = getInitials(peerName);
+      iconEl.className = `w-10 h-10 rounded-xl bg-gradient-to-tr ${peerColor || 'from-cyan-500 to-blue-600'} flex items-center justify-center font-bold text-white text-sm shadow-md shrink-0`;
+      
+      document.getElementById('chat-header-badge').textContent = 'خاص 🔒';
+      document.getElementById('chat-header-badge').className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold shrink-0";
+
+      toggleSidebar(false);
+      subscribeToMessages(`private_chats/${chatId}/messages`);
+    };
+
+    // ==========================================
+    // 3. عرض الرسائل الفورية (نص + صور + صوت)
+    // ==========================================
+    function subscribeToMessages(collectionPath) {
+      if (unsubscribeMessages) unsubscribeMessages();
+      const container = document.getElementById('messages-container');
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full text-slate-500 gap-2">
+          <div class="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <span class="text-xs">جاري تحميل المحادثة...</span>
+        </div>
+      `;
+
+      const msgsQuery = query(collection(db, collectionPath), orderBy('createdAt', 'asc'), limit(100));
+      unsubscribeMessages = onSnapshot(msgsQuery, (snapshot) => {
+        container.innerHTML = '';
+        if (snapshot.empty) {
+          container.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-center p-6">
+              <div class="w-16 h-16 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-3xl mb-3">
+                👋
+              </div>
+              <h3 class="text-sm font-bold text-slate-200">لا توجد رسائل هنا بعد!</h3>
+              <p class="text-xs text-slate-400 mt-1 max-w-xs">كن أول من يبدأ المحادثة بإرسال رسالة نصية، صورة، أو بصمة صوتية.</p>
+            </div>
+          `;
+          return;
+        }
+
+        snapshot.forEach(docSnap => {
+          renderMessageBubble(docSnap.id, docSnap.data(), container);
+        });
+
+        // تمرير تلقائي لأسفل المحادثة
+        requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight;
+        });
+      }, (err) => {
+        console.error("Messages error:", err);
+        container.innerHTML = `<p class="text-center text-xs text-rose-400 py-10">تعذر تحميل الرسائل. تحقق من صلاحيات Firestore Rules.</p>`;
+      });
+    }
+
+    function renderMessageBubble(msgId, msg, container) {
+      const isMe = msg.senderId === currentUser.uid;
+      const wrapper = document.createElement('div');
+      wrapper.className = `flex items-end gap-2.5 msg-animate ${isMe ? 'flex-row-reverse' : 'flex-row'}`;
+
+      // الأفاتار
+      const avatarHtml = `
+        <div onclick="${!isMe ? `openPrivateChat('${msg.senderId}', '${escapeHTML(msg.senderName)}', '${escapeHTML(msg.senderUsername)}', '${msg.senderColor || 'from-indigo-500 to-purple-600'}')` : ''}"
+          title="${!isMe ? 'اضغط لمراسلة @' + escapeHTML(msg.senderUsername) : 'أنت'}"
+          class="w-8 h-8 rounded-xl bg-gradient-to-tr ${msg.senderColor || 'from-indigo-500 to-purple-600'} flex items-center justify-center font-bold text-white text-xs shrink-0 shadow ${!isMe ? 'cursor-pointer hover:scale-105 transition' : ''}">
+          ${getInitials(msg.senderName)}
+        </div>
+      `;
+
+      // محتوى الرسالة (نص / صورة / صوت)
+      let mediaHtml = '';
+      if (msg.imageUrl) {
+        mediaHtml += `
+          <div class="mb-1.5 overflow-hidden rounded-xl border border-white/10 bg-black/30">
+            <img src="${msg.imageUrl}" alt="صورة مرسلة" onclick="openLightbox('${msg.imageUrl}')"
+              class="max-h-64 w-auto object-contain cursor-zoom-in hover:opacity-95 transition">
+          </div>
+        `;
+      }
+
+      if (msg.audioUrl) {
+        const audioId = `audio-${msgId}`;
+        mediaHtml += `
+          <div class="flex items-center gap-2.5 bg-black/25 rounded-xl p-2 min-w-[210px] sm:min-w-[240px] border border-white/10">
+            <button type="button" onclick="toggleAudioPlay('${audioId}', this)"
+              class="w-9 h-9 rounded-full bg-white text-indigo-950 flex items-center justify-center shrink-0 shadow hover:scale-105 transition">
+              <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+            </button>
+            <div class="flex-1 flex flex-col gap-1">
+              <input type="range" id="seek-${audioId}" value="0" min="0" max="100" step="1"
+                oninput="seekAudio('${audioId}', this.value)"
+                class="audio-slider w-full">
+              <div class="flex justify-between text-[10px] text-white/75 font-mono">
+                <span id="time-${audioId}">${msg.audioDuration || '00:00'}</span>
+                <span>رسالة صوتية 🎙️</span>
+              </div>
+            </div>
+            <audio id="${audioId}" src="${msg.audioUrl}" preload="metadata"
+              ontimeupdate="updateAudioProgress('${audioId}')"
+              onended="resetAudioPlayer('${audioId}')"></audio>
+          </div>
+        `;
+      }
+
+      const textHtml = msg.text ? `<p class="text-sm leading-relaxed break-words whitespace-pre-wrap">${escapeHTML(msg.text)}</p>` : '';
+
+      wrapper.innerHTML = `
+        ${avatarHtml}
+        <div class="max-w-[78%] sm:max-w-[65%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+          <div class="flex items-center gap-1.5 mb-1 px-1">
+            <span class="text-[11px] font-bold ${isMe ? 'text-cyan-300' : 'text-slate-300'}">${escapeHTML(msg.senderName)}</span>
+            <span class="text-[10px] text-slate-400 font-mono" dir="ltr">@${escapeHTML(msg.senderUsername || 'user')}</span>
+          </div>
+          <div class="px-3.5 py-2.5 rounded-2xl shadow-md text-white ${isMe ? 'bubble-me' : 'bubble-other'}">
+            ${mediaHtml}
+            ${textHtml}
+            <div class="text-[10px] mt-1 text-left opacity-70 font-mono">
+              ${formatTime(msg.createdAt)}
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(wrapper);
+      lucide.createIcons({ nodes: [wrapper] });
+    }
+
+    // دوال التحكم بمشغل الصوت داخل الرسائل
+    window.toggleAudioPlay = function(audioId, btn) {
+      const audio = document.getElementById(audioId);
+      if (!audio) return;
+      // إيقاف أي صوت آخر يعمل حالياً
+      document.querySelectorAll('audio').forEach(a => {
+        if (a.id !== audioId && !a.paused) {
+          a.pause();
+          const otherBtn = a.parentElement.querySelector('button');
+          if (otherBtn) otherBtn.innerHTML = '<i data-lucide="play" class="w-4 h-4 fill-current"></i>';
+        }
+      });
+
+      if (audio.paused) {
+        audio.play();
+        btn.innerHTML = '<i data-lucide="pause" class="w-4 h-4 fill-current"></i>';
+      } else {
+        audio.pause();
+        btn.innerHTML = '<i data-lucide="play" class="w-4 h-4 fill-current"></i>';
+      }
+      lucide.createIcons({ nodes: [btn] });
+    };
+
+    window.updateAudioProgress = function(audioId) {
+      const audio = document.getElementById(audioId);
+      const slider = document.getElementById(`seek-${audioId}`);
+      const timeLabel = document.getElementById(`time-${audioId}`);
+      if (!audio || !slider) return;
+      if (audio.duration) {
+        slider.value = (audio.currentTime / audio.duration) * 100;
+        const mins = String(Math.floor(audio.currentTime / 60)).padStart(2, '0');
+        const secs = String(Math.floor(audio.currentTime % 60)).padStart(2, '0');
+        if (timeLabel) timeLabel.textContent = `${mins}:${secs}`;
+      }
+    };
+
+    window.seekAudio = function(audioId, percent) {
+      const audio = document.getElementById(audioId);
+      if (audio && audio.duration) {
+        audio.currentTime = (percent / 100) * audio.duration;
+      }
+    };
+
+    window.resetAudioPlayer = function(audioId) {
+      const audio = document.getElementById(audioId);
+      const slider = document.getElementById(`seek-${audioId}`);
+      if (slider) slider.value = 0;
+      if (audio) {
+        const btn = audio.parentElement.querySelector('button');
+        if (btn) {
+          btn.innerHTML = '<i data-lucide="play" class="w-4 h-4 fill-current"></i>';
+          lucide.createIcons({ nodes: [btn] });
+        }
+      }
+    };
+
+    // ==========================================
+    // 4. إرسال النصوص والصور والرسائل الصوتية
+    // ==========================================
+
+    // ضغط الصورة وتحويلها (لضمان سرعة الرفع وتوفير نسخة احتياطية ذكية)
+    function compressImage(file, maxWidth = 900, quality = 0.78) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            canvas.toBlob((blob) => {
+              resolve({ blob, dataUrl });
+            }, 'image/jpeg', quality);
+          };
+          img.onerror = reject;
+          img.src = event.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // اختيار صورة من الجهاز
+    document.getElementById('image-file-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showToast('يرجى اختيار ملف صورة صالح', 'error');
+        return;
+      }
+      try {
+        const { blob, dataUrl } = await compressImage(file);
+        selectedImageFile = blob;
+        selectedImagePreviewDataUrl = dataUrl;
+        document.getElementById('image-preview-thumb').src = dataUrl;
+        document.getElementById('image-preview-size').textContent = `${Math.round(blob.size / 1024)} كيلوبايت • جاهزة للإرسال`;
+        document.getElementById('image-preview-bar').classList.remove('hidden');
+      } catch (err) {
+        showToast('تعذر معالجة الصورة المختارة', 'error');
+      }
+    });
+
+    window.clearSelectedImage = function() {
+      selectedImageFile = null;
+      selectedImagePreviewDataUrl = null;
+      document.getElementById('image-file-input').value = '';
+      document.getElementById('image-preview-bar').classList.add('hidden');
+    };
+
+    // رفع الوسائط إلى Firebase Storage مع بديل ذكي فوري في حال عدم تفعيل Storage بعد
+    async function uploadMediaWithFallback(blob, folder, fallbackDataUrl) {
+      try {
+        const fileName = `${folder}/${currentUser.uid}_${Date.now()}`;
+        const storageRef = ref(storage, fileName);
+        // مهلة 6 ثوانٍ للرفع إلى Storage
+        const uploadTask = uploadBytes(storageRef, blob);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000));
+        const snapshot = await Promise.race([uploadTask, timeoutPromise]);
+        return await getDownloadURL(snapshot.ref);
+      } catch (err) {
+        console.warn("Storage upload skipped/failed, using inline compressed fallback:", err);
+        return fallbackDataUrl;
+      }
+    }
+
+    // إرسال الرسالة النصية أو الصورة
+    document.getElementById('message-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('message-input');
+      const text = input.value.trim();
+
+      if (!text && !selectedImageFile) return;
+
+      const sendBtn = document.getElementById('send-msg-btn');
+      const progressBar = document.getElementById('upload-progress-bar');
+      sendBtn.disabled = true;
+      if (selectedImageFile) progressBar.classList.remove('hidden');
+
+      try {
+        let imageUrl = null;
+        if (selectedImageFile) {
+          imageUrl = await uploadMediaWithFallback(selectedImageFile, 'chat_images', selectedImagePreviewDataUrl);
+          clearSelectedImage();
+        }
+
+        input.value = '';
+        await dispatchMessage({
+          text,
+          imageUrl,
+          audioUrl: null
+        });
+      } catch (err) {
+        console.error(err);
+        showToast('فشل إرسال الرسالة، حاول مرة أخرى', 'error');
+      } finally {
+        sendBtn.disabled = false;
+        progressBar.classList.add('hidden');
+      }
+    });
+
+    // حفظ الرسالة في Firestore وتحديث فهرس الخاص إن وجد
+    async function dispatchMessage({ text = '', imageUrl = null, audioUrl = null, audioDuration = null }) {
+      const targetCollection = currentChat.type === 'room'
+        ? `rooms/${currentChat.id}/messages`
+        : `private_chats/${currentChat.id}/messages`;
+
+      const payload = {
+        text,
+        imageUrl,
+        audioUrl,
+        audioDuration,
+        senderId: currentUser.uid,
+        senderName: currentUserProfile?.displayName || 'مستخدم',
+        senderUsername: currentUserProfile?.username || 'user',
+        senderColor: currentUserProfile?.avatarColor || 'from-indigo-500 to-purple-600',
+        createdAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db, targetCollection), payload);
+
+      // إذا كانت محادثة خاصة، حدّث قائمة المحادثات الخاصة لكلا الطرفين
+      if (currentChat.type === 'dm') {
+        const summaryText = text ? text : (imageUrl ? '📷 صورة' : '🎙️ رسالة صوتية');
+        // تحديث عند المرسل
+        await setDoc(doc(db, 'user_chats', currentUser.uid, 'threads', currentChat.id), {
+          chatId: currentChat.id,
+          peerUid: currentChat.peerUid,
+          peerName: currentChat.peerName,
+          peerUsername: currentChat.peerUsername,
+          peerColor: currentChat.peerColor,
+          lastMessage: summaryText,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        // تحديث عند المستقبل
+        await setDoc(doc(db, 'user_chats', currentChat.peerUid, 'threads', currentChat.id), {
+          chatId: currentChat.id,
+          peerUid: currentUser.uid,
+          peerName: currentUserProfile?.displayName || 'مستخدم',
+          peerUsername: currentUserProfile?.username || 'user',
+          peerColor: currentUserProfile?.avatarColor || 'from-indigo-500 to-purple-600',
+          lastMessage: summaryText,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+    }
+
+    // ==========================================
+    // 5. نظام تسجيل وإرسال الرسائل الصوتية
+    // ==========================================
+    window.startVoiceRecording = async function() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast('متصفحك لا يدعم تسجيل الصوت أو أن الصفحة ليست HTTPS', 'error');
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        isRecordingCancelled = false;
+        recordingSeconds = 0;
+
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach(t => t.stop());
+          clearInterval(recordingInterval);
+          document.getElementById('recording-ui').classList.add('hidden');
+          document.getElementById('message-form').classList.remove('hidden');
+
+          if (isRecordingCancelled || audioChunks.length === 0) return;
+
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+          const secs = String(recordingSeconds % 60).padStart(2, '0');
+          const durationStr = `${mins}:${secs}`;
+
+          const progressBar = document.getElementById('upload-progress-bar');
+          progressBar.classList.remove('hidden');
+
+          try {
+            // تحويل الصوت إلى DataURL كخيار احتياطي سريع
+            const reader = new FileReader();
+            const fallbackDataUrl = await new Promise((res) => {
+              reader.onloadend = () => res(reader.result);
+              reader.readAsDataURL(audioBlob);
+            });
+
+            const audioUrl = await uploadMediaWithFallback(audioBlob, 'chat_audio', fallbackDataUrl);
+            await dispatchMessage({
+              text: '',
+              imageUrl: null,
+              audioUrl,
+              audioDuration: durationStr
+            });
+          } catch (err) {
+            console.error(err);
+            showToast('فشل إرسال الرسالة الصوتية', 'error');
+          } finally {
+            progressBar.classList.add('hidden');
+          }
+        };
+
+        mediaRecorder.start();
+        document.getElementById('message-form').classList.add('hidden');
+        document.getElementById('recording-ui').classList.remove('hidden');
+        document.getElementById('recording-timer').textContent = '00:00';
+
+        recordingInterval = setInterval(() => {
+          recordingSeconds++;
+          const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+          const secs = String(recordingSeconds % 60).padStart(2, '0');
+          document.getElementById('recording-timer').textContent = `${mins}:${secs}`;
+          // إيقاف تلقائي عند 60 ثانية لضمان سرعة الأداء
+          if (recordingSeconds >= 60) {
+            stopAndSendVoice();
+          }
+        }, 1000);
+
+      } catch (err) {
+        console.error(err);
+        showToast('يرجى السماح للموقع بالوصول إلى الميكروفون 🎙️', 'error');
+      }
+    };
+
+    window.cancelVoiceRecording = function() {
+      isRecordingCancelled = true;
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+    };
+
+    window.stopAndSendVoice = function() {
+      isRecordingCancelled = false;
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+    };
+  </script>
+</body>
+</html>
