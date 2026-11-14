@@ -1,0 +1,2892 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>نبض شات | Nabd Chat</title>
+  <!-- أيقونة الموقع (SVG Clean) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%235865F2'/%3E%3Cstop offset='100%25' stop-color='%23EB459E'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='url(%23g)'/%3E%3Cpath d='M14 34h9l5-14 8 28 5-14h9' fill='none' stroke='%23fff' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+
+  <!-- الخطوط العربية والعالمية -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&family=Changa:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Inter:wght@400;600;700&family=Readex+Pro:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <!-- تحميل ملف الأصول الخارجي إن وُجد مع وجود بديل مدمج -->
+  <script src="./assets.js" defer onerror="console.log('Using built-in assets')"></script>
+
+  <style>
+    :root {
+      --bg-primary: #313338;
+      --bg-secondary: #2b2d31;
+      --bg-tertiary: #1e1f22;
+      --bg-elevated: #383a40;
+      --accent-1: #5865f2;
+      --accent-2: #7983f5;
+      --text-main: #f2f3f5;
+      --text-muted: #949ba4;
+      --app-font: 'Cairo', sans-serif;
+      --bg-wallpaper: none;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: var(--app-font);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-tertiary);
+      background-image: var(--bg-wallpaper);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: var(--text-main);
+      margin: 0;
+      overflow: hidden;
+      height: 100dvh;
+      transition: background 0.35s ease, color 0.25s ease;
+    }
+
+    /* تثبيت التمرير وتقليل العشوائية */
+    .messages-container {
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      overflow-anchor: auto;
+      contain: content;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
+
+    /* حركات الأنميشن المتعددة والناعمة */
+    @keyframes msgEnterRight {
+      0% { opacity: 0; transform: translateX(18px) scale(0.97); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes msgEnterLeft {
+      0% { opacity: 0; transform: translateX(-18px) scale(0.97); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes modalScaleIn {
+      0% { opacity: 0; transform: scale(0.93) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes panelFade {
+      0% { opacity: 0; transform: translateY(6px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes voicePulse {
+      0% { box-shadow: 0 0 0 0 rgba(35, 165, 90, 0.7); }
+      70% { box-shadow: 0 0 0 11px rgba(35, 165, 90, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(35, 165, 90, 0); }
+    }
+    @keyframes ringShake {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.04) rotate(-2deg); }
+      75% { transform: scale(1.04) rotate(2deg); }
+    }
+
+    .anim-msg-me { animation: msgEnterRight 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+    .anim-msg-other { animation: msgEnterLeft 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+    .anim-modal { animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .anim-panel { animation: panelFade 0.2s ease-out forwards; }
+    .anim-speaking { animation: voicePulse 1.4s infinite; }
+    .anim-ring { animation: ringShake 1.2s infinite ease-in-out; }
+
+    .bg-app-primary { background-color: rgba(49, 51, 56, 0.92); backdrop-filter: blur(12px); }
+    .bg-app-secondary { background-color: rgba(43, 45, 49, 0.94); backdrop-filter: blur(12px); }
+    .bg-app-tertiary { background-color: rgba(30, 31, 34, 0.96); }
+    .bg-app-elevated { background-color: var(--bg-elevated); }
+    .accent-gradient { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); }
+
+    /* فقاعات الرسائل: يمين للمرسل، يسار للآخرين */
+    .bubble-me {
+      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      color: #ffffff;
+      border-radius: 18px 18px 4px 18px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+    .bubble-other {
+      background-color: var(--bg-elevated);
+      color: var(--text-main);
+      border-radius: 18px 18px 18px 4px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14);
+    }
+
+    /* حلقة الستوري */
+    .story-ring {
+      background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      padding: 2.5px;
+      border-radius: 9999px;
+      transition: transform 0.2s ease;
+    }
+    .story-ring:hover { transform: scale(1.06); }
+
+    /* تبديل شكل التصفح: الأصلي vs المبسط */
+    body.layout-modern #serversRail { display: none !important; }
+    body.layout-modern #modernBottomNav { display: flex !important; }
+    body.layout-classic #modernBottomNav { display: none !important; }
+  </style>
+</head>
+<body class="layout-classic select-none">
+
+  <!-- حاوية الإشعارات الفورية (Toast) -->
+  <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 w-[92%] max-w-md pointer-events-none"></div>
+
+  <!-- ================= 1. شاشة تسجيل الدخول وإنشاء الحساب ================= -->
+  <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-app-tertiary p-4 overflow-y-auto">
+    <div class="w-full max-w-md bg-app-secondary border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl anim-modal">
+      <div class="flex flex-col items-center text-center mb-6">
+        <div class="w-16 h-16 rounded-2xl accent-gradient flex items-center justify-center shadow-lg mb-3">
+          <svg class="w-9 h-9 text-white" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 34h10l5-15 10 30 5-15h10"/>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-extrabold tracking-tight">نبض شات</h1>
+        <p class="text-xs text-gray-400 mt-1">مجتمعات، سيرفرات، مكالمات صوتية وفيديو، وستوري</p>
+      </div>
+
+      <!-- تبويبات الدخول والتسجيل -->
+      <div class="grid grid-cols-2 bg-app-tertiary p-1 rounded-xl mb-5">
+        <button id="tabLogin" onclick="switchAuthTab('login')" class="py-2 text-sm font-bold rounded-lg accent-gradient text-white transition">تسجيل الدخول</button>
+        <button id="tabRegister" onclick="switchAuthTab('register')" class="py-2 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition">حساب جديد</button>
+      </div>
+
+      <!-- نموذج تسجيل الدخول -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1">البريد الإلكتروني</label>
+          <input type="email" id="loginEmail" required placeholder="name@example.com" class="w-full px-4 py-3 rounded-xl bg-app-tertiary border border-white/10 text-sm focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-gray-300">كلمة المرور</label>
+            <button type="button" onclick="handleForgotPassword()" class="text-xs text-indigo-400 hover:underline font-semibold">نسيت كلمة المرور؟</button>
+          </div>
+          <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl bg-app-tertiary border border-white/10 text-sm focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div id="login2faWrapper" class="hidden">
+          <label class="block text-xs font-semibold text-amber-400 mb-1">رمز المصادقة الثنائية (Authy / TOTP)</label>
+          <input type="text" id="login2faCode" maxlength="6" placeholder="أدخل الرمز المكون من 6 أرقام" class="w-full px-4 py-3 rounded-xl bg-app-tertiary border border-amber-500/40 text-sm text-center tracking-widest focus:outline-none" />
+        </div>
+        <button type="submit" class="w-full py-3 rounded-xl accent-gradient font-bold text-sm shadow-lg hover:opacity-95 active:scale-[0.99] transition">دخول إلى المنصة</button>
+      </form>
+
+      <!-- نموذج إنشاء حساب جديد -->
+      <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3.5 hidden">
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1">الاسم الظاهر</label>
+          <input type="text" id="regDisplayName" required minlength="2" maxlength="30" placeholder="مثال: علي العراقي" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1">اسم المستخدم (فريد بالإنجليزية)</label>
+          <input type="text" id="regUsername" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_.]+" placeholder="ali_iq" dir="ltr" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm text-left focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1">البريد الإلكتروني</label>
+          <input type="email" id="regEmail" required placeholder="name@example.com" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1">كلمة المرور</label>
+          <input type="password" id="regPassword" required minlength="6" placeholder="6 أحرف أو أكثر" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm focus:outline-none focus:border-indigo-500" />
+        </div>
+        <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-sm shadow-lg transition">إنشاء حساب جديد</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= 2. الواجهة الرئيسية للتطبيق ================= -->
+  <div id="mainApp" class="hidden w-full h-full flex flex-col md:flex-row overflow-hidden">
+
+    <!-- شريط السيرفرات الجانبي (الوضع الأصلي) -->
+    <aside id="serversRail" class="w-full md:w-[74px] h-16 md:h-full bg-app-tertiary border-b md:border-b-0 md:border-l border-white/5 flex md:flex-col items-center px-3 md:px-0 py-2 md:py-3 gap-2.5 overflow-x-auto md:overflow-y-auto shrink-0 z-20">
+      <button onclick="selectContext('general')" id="btnContextGeneral" title="الشات العام" class="relative w-12 h-12 rounded-2xl accent-gradient flex items-center justify-center text-white shadow-md shrink-0 hover:rounded-xl transition-all">
+        <i class="fa-solid fa-earth-americas text-lg"></i>
+      </button>
+
+      <button onclick="selectContext('dms')" id="btnContextDMs" title="الخاص والأصدقاء والقروبات" class="relative w-12 h-12 rounded-2xl bg-app-secondary hover:bg-indigo-600 flex items-center justify-center text-gray-200 shrink-0 transition-all">
+        <i class="fa-solid fa-user-group text-lg"></i>
+        <span id="friendReqBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-[10px] font-bold flex items-center justify-center text-white">0</span>
+      </button>
+
+      <div class="w-[1px] h-7 md:w-8 md:h-[1px] bg-white/10 shrink-0"></div>
+
+      <!-- السيرفرات المنضم إليها -->
+      <div id="joinedServersList" class="flex md:flex-col items-center gap-2.5"></div>
+
+      <button onclick="openModal('exploreServersModal')" title="استكشاف السيرفرات العامة" class="w-12 h-12 rounded-2xl bg-app-secondary hover:bg-emerald-600 text-emerald-400 hover:text-white flex items-center justify-center shrink-0 transition-all">
+        <i class="fa-solid fa-compass text-lg"></i>
+      </button>
+      <button onclick="openModal('createServerModal')" title="إنشاء سيرفر جديد" class="w-12 h-12 rounded-2xl bg-app-secondary hover:bg-indigo-600 text-indigo-400 hover:text-white flex items-center justify-center shrink-0 transition-all">
+        <i class="fa-solid fa-plus text-lg"></i>
+      </button>
+    </aside>
+
+    <!-- القائمة الجانبية للقنوات / الأصدقاء / الخاص -->
+    <aside id="channelsDrawer" class="fixed md:static inset-y-0 right-0 w-72 bg-app-secondary border-l border-white/5 flex flex-col z-30 transform translate-x-full md:translate-x-0 transition-transform duration-300 ease-out">
+      <div class="h-14 px-4 border-b border-white/5 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <h2 id="sidebarTitle" class="font-extrabold text-base truncate">الشات العام</h2>
+          <span id="sidebarPrivacyBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-gray-300"></span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button id="btnServerSettings" onclick="openServerSettingsModal()" class="hidden p-2 rounded-lg hover:bg-white/10 text-gray-300" title="إعدادات السيرفر">
+            <i class="fa-solid fa-sliders"></i>
+          </button>
+          <button onclick="toggleMobileDrawer(false)" class="md:hidden p-2 rounded-lg hover:bg-white/10 text-gray-400">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- محتوى القائمة الجانبية -->
+      <div id="sidebarContent" class="flex-1 overflow-y-auto p-3 space-y-4"></div>
+
+      <!-- شريط الاتصال الصوتي (يظهر عند الاتصال بروم صوتي أو مكالمة) -->
+      <div id="voiceStatusBar" class="hidden bg-emerald-950/90 border-t border-emerald-500/30 p-2.5">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 anim-speaking"></span>
+            <div class="truncate">
+              <div class="text-xs font-bold text-emerald-300">متصل بالصوت</div>
+              <div id="voiceChannelLabel" class="text-[11px] text-gray-300 truncate">روم صوتي</div>
+            </div>
+          </div>
+          <button onclick="leaveVoiceOrCall()" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold" title="قطع الاتصال">
+            <i class="fa-solid fa-phone-slash"></i>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button id="btnToggleMic" onclick="toggleMuteMic()" class="py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-semibold flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-microphone"></i> <span>كتم المايك</span>
+          </button>
+          <button id="btnToggleDeafen" onclick="toggleDeafen()" class="py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-semibold flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-headphones"></i> <span>ديفين</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- بطاقة المستخدم السفلية -->
+      <div class="h-16 px-3 bg-app-tertiary/95 border-t border-white/5 flex items-center justify-between shrink-0">
+        <div onclick="openUserProfileModal(currentUser.uid)" class="flex items-center gap-2.5 min-w-0 cursor-pointer hover:bg-white/5 p-1.5 rounded-xl transition flex-1">
+          <div class="relative shrink-0">
+            <img id="myAvatarImg" src="" alt="Avatar" class="w-9 h-9 rounded-full object-cover bg-indigo-600" />
+            <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#1e1f22]"></span>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1">
+              <span id="myDisplayName" class="text-xs font-bold truncate">المستخدم</span>
+              <span id="superAdminCrown" class="hidden text-amber-400 text-[11px]" title="الإدارة العليا"><i class="fa-solid fa-crown"></i></span>
+            </div>
+            <div id="myUsernameLabel" class="text-[11px] text-gray-400 truncate" dir="ltr">@user</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1 shrink-0">
+          <!-- زر لوحة البلاغات للإدارة العليا (مخفي تماماً عن الأعضاء) -->
+          <button id="btnSuperAdminReports" onclick="openAdminReportsModal()" class="hidden relative p-2 rounded-xl bg-rose-500/15 text-rose-400 hover:bg-rose-500/25 transition" title="بلاغات الإدارة العليا">
+            <i class="fa-solid fa-shield-halved text-sm"></i>
+            <span id="reportsCountBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-600 text-[9px] text-white flex items-center justify-center font-bold">0</span>
+          </button>
+
+          <!-- زر الإعدادات -->
+          <button onclick="openSettingsModal('account')" class="p-2 rounded-xl hover:bg-white/10 text-gray-300 transition" title="الإعدادات">
+            <i class="fa-solid fa-gear text-base"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= 3. منطقة المحادثة والمحتوى الرئيسية ================= -->
+    <main class="flex-1 flex flex-col bg-app-primary min-w-0 h-full relative">
+
+      <!-- شريط الستوري المجمّع (أيقونة واحدة لكل مستخدم) -->
+      <div id="storiesStrip" class="px-4 py-2.5 bg-app-secondary/65 border-b border-white/5 flex items-center gap-3 overflow-x-auto shrink-0">
+        <button onclick="openModal('createStoryModal')" class="flex flex-col items-center gap-1 shrink-0 group">
+          <div class="w-12 h-12 rounded-full bg-app-elevated border-2 border-dashed border-indigo-400 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+          <span class="text-[11px] text-gray-300 font-medium">ستوري +</span>
+        </button>
+        <div id="groupedStoriesList" class="flex items-center gap-3"></div>
+      </div>
+
+      <!-- رأس المحادثة العلوي -->
+      <header class="h-14 px-3 sm:px-4 border-b border-white/5 flex items-center justify-between bg-app-primary/85 shrink-0 z-10">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <button onclick="toggleMobileDrawer(true)" class="md:hidden p-2 rounded-xl bg-white/5 text-gray-200">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div id="chatHeaderIcon" class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-hashtag"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 id="chatHeaderTitle" class="font-bold text-sm sm:text-base truncate">الشات العام</h3>
+            <p id="chatHeaderSub" class="text-[11px] text-gray-400 truncate">مساحة التواصل المفتوحة للجميع</p>
+          </div>
+        </div>
+
+        <!-- أزرار التحكم بالمحادثة -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- شورت السيرفر -->
+          <button id="btnOpenShorts" onclick="openShortsViewer()" class="hidden px-2.5 py-1.5 rounded-xl bg-pink-500/15 text-pink-400 hover:bg-pink-500/25 text-xs font-bold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-clapperboard"></i> <span class="hidden sm:inline">شورت</span>
+          </button>
+
+          <!-- المكالمات في الخاص -->
+          <button id="btnDmVoiceCall" onclick="startDirectCall(false)" class="hidden p-2 rounded-xl bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition" title="مكالمة صوتية">
+            <i class="fa-solid fa-phone"></i>
+          </button>
+          <button id="btnDmVideoCall" onclick="startDirectCall(true)" class="hidden p-2 rounded-xl bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25 transition" title="مكالمة فيديو">
+            <i class="fa-solid fa-video"></i>
+          </button>
+
+          <!-- إضافة صديق للقروب -->
+          <button id="btnAddGroupMember" onclick="openAddFriendToGroupModal()" class="hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 transition" title="إضافة صديق للقروب">
+            <i class="fa-solid fa-user-plus"></i>
+          </button>
+
+          <!-- الرسائل المثبتة -->
+          <button onclick="openPinnedMessagesModal()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 transition" title="الرسائل المثبتة">
+            <i class="fa-solid fa-thumbtack"></i>
+          </button>
+
+          <!-- البحث في المحادثة -->
+          <button onclick="toggleChatSearch()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 transition" title="البحث في المحادثة">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+
+          <!-- قفل/فتح الشات (يظهر للإدارة ومالك السيرفر فقط) -->
+          <button id="btnToggleLockChat" onclick="toggleChannelLock()" class="hidden p-2 rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition" title="قفل / فتح الشات">
+            <i class="fa-solid fa-lock-open"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- شريط البحث داخل المحادثة -->
+      <div id="inChatSearchBar" class="hidden px-4 py-2 bg-app-secondary border-b border-white/10 flex items-center gap-2 anim-panel">
+        <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs"></i>
+        <input type="text" id="inChatSearchInput" oninput="filterMessagesInChat(this.value)" placeholder="ابحث عن رسالة داخل هذه المحادثة..." class="flex-1 bg-transparent text-xs focus:outline-none" />
+        <span id="searchMatchCount" class="text-[11px] text-gray-400"></span>
+        <button onclick="toggleChatSearch(false)" class="text-gray-400 hover:text-white text-xs px-2"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- لوحة الغرفة الصوتية / المكالمة الحية -->
+      <div id="activeCallGrid" class="hidden bg-app-tertiary/95 border-b border-white/10 p-4 anim-panel">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 anim-speaking"></span>
+            <h4 id="activeCallTitle" class="font-bold text-sm text-emerald-400">الغرفة الصوتية المباشرة</h4>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="leaveVoiceOrCall()" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white">مغادرة</button>
+          </div>
+        </div>
+        <div id="callParticipantsContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto"></div>
+      </div>
+
+      <!-- قائمة الرسائل -->
+      <div id="messagesList" class="messages-container flex-1 p-4 space-y-3"></div>
+
+      <!-- تنبيه قفل الشات -->
+      <div id="channelLockedBanner" class="hidden px-4 py-3 bg-amber-500/15 border-t border-amber-500/30 text-center text-xs font-bold text-amber-300">
+        <i class="fa-solid fa-lock ml-1"></i> تم قفل الشات في هذه القناة؛ لا يمكن للأعضاء الكتابة حالياً.
+      </div>
+
+      <!-- منطقة إدخال الرسالة -->
+      <div id="messageInputArea" class="p-3 bg-app-primary border-t border-white/5 shrink-0 relative">
+        <!-- قائمة المنشن التلقائية (@) -->
+        <div id="mentionAutocompleteBox" class="hidden absolute bottom-20 right-4 w-64 bg-app-secondary border border-white/10 rounded-2xl shadow-2xl p-2 z-40 max-h-48 overflow-y-auto"></div>
+
+        <!-- منتقي الإيموجيات المتحركة والملصقات -->
+        <div id="emojiStickerPicker" class="hidden absolute bottom-20 right-4 w-80 max-w-[92vw] bg-app-secondary border border-white/10 rounded-2xl shadow-2xl p-3 z-40 anim-modal">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2 mb-2">
+            <div class="flex gap-1.5">
+              <button onclick="switchPickerTab('emojis')" id="tabPickerEmojis" class="px-3 py-1 rounded-lg text-xs font-bold accent-gradient text-white">إيموجيات</button>
+              <button onclick="switchPickerTab('stickers')" id="tabPickerStickers" class="px-3 py-1 rounded-lg text-xs font-bold text-gray-400 hover:text-white">ملصقات</button>
+            </div>
+            <button onclick="openModal('addCustomAssetModal')" class="text-xs text-indigo-400 hover:underline font-bold">+ إضافة</button>
+          </div>
+          <div id="pickerContentGrid" class="grid grid-cols-5 gap-2 max-h-52 overflow-y-auto p-1"></div>
+        </div>
+
+        <!-- معاينة المرفقات (حتى 10 صور أو فيديو) -->
+        <div id="attachmentPreviewBar" class="hidden mb-2 p-2.5 rounded-xl bg-app-secondary flex items-center justify-between">
+          <div class="flex items-center gap-2 truncate">
+            <i class="fa-solid fa-paperclip text-indigo-400"></i>
+            <span id="attachmentFileName" class="text-xs truncate">ملفات مرفقة</span>
+          </div>
+          <button onclick="clearPendingAttachments()" class="text-rose-400 hover:text-rose-300 text-xs px-2"><i class="fa-solid fa-trash"></i></button>
+        </div>
+
+        <!-- شريط التعديل على رسالة -->
+        <div id="editingBanner" class="hidden mb-2 px-3 py-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-between text-xs">
+          <span class="text-indigo-300 font-bold"><i class="fa-solid fa-pen ml-1"></i> جاري تعديل الرسالة...</span>
+          <button onclick="cancelEditMessage()" class="text-gray-300 hover:text-white">إلغاء</button>
+        </div>
+
+        <form onsubmit="sendMessage(event)" class="flex items-center gap-2 bg-app-secondary px-3 py-2 rounded-2xl border border-white/10 focus-within:border-indigo-500/60 transition">
+          <label class="p-2 rounded-xl hover:bg-white/10 text-gray-300 cursor-pointer transition" title="إرفاق صور (حتى 10) أو فيديو">
+            <i class="fa-solid fa-image"></i>
+            <input type="file" id="chatMediaInput" accept="image/*,video/*" multiple class="hidden" onchange="handleMediaFilesSelect(event)" />
+          </label>
+
+          <button type="button" onclick="toggleEmojiPicker()" class="p-2 rounded-xl hover:bg-white/10 text-amber-400 transition" title="إيموجيات متحركة وملصقات">
+            <i class="fa-regular fa-face-smile-beam text-lg"></i>
+          </button>
+
+          <input type="text" id="messageInput" oninput="handleMentionTyping(this.value)" autocomplete="off" placeholder="اكتب رسالتك هنا... (اكتب @ للمنشن)" class="flex-1 bg-transparent text-sm focus:outline-none" />
+
+          <button type="submit" class="w-10 h-10 rounded-xl accent-gradient text-white flex items-center justify-center shadow-md hover:opacity-95 active:scale-95 transition shrink-0">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- شريط التنقل السفلي المبسط (Layout: Modern) -->
+      <nav id="modernBottomNav" class="hidden h-14 bg-app-tertiary border-t border-white/10 items-center justify-around px-2 shrink-0 z-20">
+        <button onclick="selectContext('general')" class="flex flex-col items-center gap-0.5 text-gray-300 hover:text-indigo-400 text-xs">
+          <i class="fa-solid fa-earth-americas text-base"></i>
+          <span>الشات العام</span>
+        </button>
+        <button onclick="selectContext('dms'); toggleMobileDrawer(true)" class="flex flex-col items-center gap-0.5 text-gray-300 hover:text-indigo-400 text-xs">
+          <i class="fa-solid fa-user-group text-base"></i>
+          <span>الأصدقاء</span>
+        </button>
+        <button onclick="selectContext('dms'); toggleMobileDrawer(true)" class="flex flex-col items-center gap-0.5 text-gray-300 hover:text-indigo-400 text-xs">
+          <i class="fa-solid fa-comment-dots text-base"></i>
+          <span>المحادثات</span>
+        </button>
+        <button onclick="openModal('exploreServersModal')" class="flex flex-col items-center gap-0.5 text-gray-300 hover:text-indigo-400 text-xs">
+          <i class="fa-solid fa-compass text-base"></i>
+          <span>السيرفرات</span>
+        </button>
+      </nav>
+    </main>
+  </div>
+
+  <!-- ================= النوافذ المنبثقة (Modals) ================= -->
+
+  <!-- 1. نافذة الإعدادات الشاملة (Account, Theme, Font, Layout, AutoMod) -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="w-full max-w-3xl h-[88vh] bg-app-secondary border border-white/10 rounded-3xl shadow-2xl flex flex-col sm:flex-row overflow-hidden anim-modal">
+      <div class="w-full sm:w-56 bg-app-tertiary p-3 border-b sm:border-b-0 sm:border-l border-white/5 flex sm:flex-col gap-1.5 overflow-x-auto shrink-0">
+        <div class="hidden sm:block text-xs font-extrabold text-gray-400 px-3 py-2">الإعدادات</div>
+        <button onclick="switchSettingsTab('account')" id="stab-account" class="settings-tab-btn px-3 py-2.5 rounded-xl text-xs font-bold text-right flex items-center gap-2 accent-gradient text-white shrink-0">
+          <i class="fa-solid fa-user-gear"></i> <span>Account</span>
+        </button>
+        <button onclick="switchSettingsTab('theme')" id="stab-theme" class="settings-tab-btn px-3 py-2.5 rounded-xl text-xs font-bold text-right flex items-center gap-2 text-gray-300 hover:bg-white/5 shrink-0">
+          <i class="fa-solid fa-palette"></i> <span>الثيم والألوان</span>
+        </button>
+        <button onclick="switchSettingsTab('font')" id="stab-font" class="settings-tab-btn px-3 py-2.5 rounded-xl text-xs font-bold text-right flex items-center gap-2 text-gray-300 hover:bg-white/5 shrink-0">
+          <i class="fa-solid fa-font"></i> <span>خط الموقع</span>
+        </button>
+        <button onclick="switchSettingsTab('layout')" id="stab-layout" class="settings-tab-btn px-3 py-2.5 rounded-xl text-xs font-bold text-right flex items-center gap-2 text-gray-300 hover:bg-white/5 shrink-0">
+          <i class="fa-solid fa-table-columns"></i> <span>إعدادات الشكل</span>
+        </button>
+        <!-- تبويب AutoMod العام (مخفي تماماً عن الأعضاء) -->
+        <button onclick="switchSettingsTab('automod')" id="stab-automod" class="hidden settings-tab-btn px-3 py-2.5 rounded-xl text-xs font-bold text-right flex items-center gap-2 text-rose-400 hover:bg-rose-500/10 shrink-0">
+          <i class="fa-solid fa-robot"></i> <span>AutoMod العام</span>
+        </button>
+        <div class="sm:mt-auto pt-2">
+          <button onclick="handleLogout()" class="w-full px-3 py-2 rounded-xl bg-rose-500/15 text-rose-400 hover:bg-rose-500/25 text-xs font-bold flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-from-bracket"></i> <span>تسجيل الخروج</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 flex flex-col min-w-0">
+        <div class="h-14 px-5 border-b border-white/5 flex items-center justify-between shrink-0">
+          <h3 id="settingsSectionTitle" class="font-extrabold text-base">معلومات الحساب</h3>
+          <button onclick="closeModal('settingsModal')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="settingsSectionBody" class="flex-1 overflow-y-auto p-5 space-y-5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. نافذة بطاقة العضو (Profile Card + البنر + الحفظ + الستوريات + الحظر) -->
+  <div id="userProfileModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-app-secondary border border-white/10 rounded-3xl overflow-hidden shadow-2xl anim-modal">
+      <div class="relative h-32 bg-gradient-to-r from-indigo-600 to-purple-700">
+        <img id="profBannerImg" src="" alt="Banner" class="w-full h-full object-cover hidden" />
+        <button onclick="closeModal('userProfileModal')" class="absolute top-3 left-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"><i class="fa-solid fa-xmark"></i></button>
+        <button id="btnDownloadBanner" onclick="downloadProfileMedia('banner')" class="hidden absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-black/65 text-white text-[11px] hover:bg-black/85">
+          <i class="fa-solid fa-download ml-1"></i> حفظ البنر
+        </button>
+      </div>
+
+      <div class="px-5 pb-5 relative">
+        <div class="flex items-end justify-between -mt-12 mb-3">
+          <div class="relative">
+            <img id="profAvatarImg" src="" alt="Avatar" class="w-24 h-24 rounded-full border-4 border-[#2b2d31] object-cover bg-indigo-600 shadow-lg" />
+            <button onclick="downloadProfileMedia('avatar')" title="حفظ الصورة الشخصية" class="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center shadow">
+              <i class="fa-solid fa-download"></i>
+            </button>
+          </div>
+          <button id="btnViewUserStories" onclick="openUserStoriesFromProfile()" class="hidden px-3 py-1.5 rounded-xl bg-pink-500/20 text-pink-400 border border-pink-500/30 text-xs font-bold hover:bg-pink-500/30">
+            <i class="fa-solid fa-circle-play ml-1"></i> ستورياته
+          </button>
+        </div>
+
+        <div class="mb-3">
+          <div class="flex items-center gap-2">
+            <h3 id="profDisplayName" class="text-lg font-extrabold">الاسم</h3>
+            <span id="profBadges" class="flex items-center gap-1"></span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+            <span id="profUsername" dir="ltr">@username</span>
+            <span>•</span>
+            <span id="profNumericId" class="font-mono text-[11px] bg-white/5 px-2 py-0.5 rounded">ID: 000000</span>
+          </div>
+        </div>
+
+        <div class="bg-app-tertiary/85 rounded-2xl p-3 mb-4 border border-white/5">
+          <div class="text-[11px] font-bold text-gray-400 mb-1">نبذة عني (About)</div>
+          <p id="profAboutText" class="text-xs text-gray-200 leading-relaxed">لا توجد نبذة تعريفية بعد.</p>
+        </div>
+
+        <div id="profActionButtons" class="grid grid-cols-2 gap-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. عارض الستوري التفاعلي (Multi-Slide + المشاهدون + التعليقات) -->
+  <div id="storyViewerModal" class="hidden fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-2 sm:p-4">
+    <div class="relative w-full max-w-md h-[88vh] bg-zinc-900 rounded-3xl overflow-hidden flex flex-col border border-white/10 shadow-2xl anim-modal">
+      <div id="storyProgressBars" class="flex gap-1 p-3 z-20"></div>
+
+      <div class="px-4 pb-2 flex items-center justify-between z-20">
+        <div class="flex items-center gap-2.5">
+          <img id="storyAuthorAvatar" src="" class="w-9 h-9 rounded-full object-cover border border-white/20" />
+          <div>
+            <div id="storyAuthorName" class="text-xs font-bold text-white">الاسم</div>
+            <div id="storyVisibilityBadge" class="text-[10px] text-gray-300">ستوري</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="reportCurrentStory()" class="p-2 rounded-full bg-white/10 text-amber-400 text-xs" title="إبلاغ"><i class="fa-solid fa-flag"></i></button>
+          <button id="btnDeleteStory" onclick="deleteCurrentStory()" class="hidden p-2 rounded-full bg-rose-600/85 text-white text-xs" title="حذف الستوري"><i class="fa-solid fa-trash"></i></button>
+          <button onclick="closeModal('storyViewerModal')" class="p-2 rounded-full bg-white/10 text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="relative flex-1 flex items-center justify-center bg-black overflow-hidden">
+        <div onclick="prevStorySlide()" class="absolute inset-y-0 right-0 w-1/3 z-10 cursor-pointer"></div>
+        <div onclick="nextStorySlide()" class="absolute inset-y-0 left-0 w-2/3 z-10 cursor-pointer"></div>
+        <div id="storyMediaContainer" class="w-full h-full flex items-center justify-center p-4 text-center"></div>
+      </div>
+
+      <!-- التعليقات والمشاهدات -->
+      <div id="storyCommentsBox" class="max-h-24 overflow-y-auto px-3 py-1.5 bg-black/75 text-[11px] space-y-1 border-t border-white/5"></div>
+      <div class="p-3 bg-black/90 border-t border-white/10 flex items-center gap-2 z-20">
+        <button onclick="showStoryViewersList()" id="storyViewsCount" class="text-xs text-gray-300 px-2 hover:text-white"><i class="fa-solid fa-eye ml-1"></i> 0</button>
+        <input type="text" id="storyReplyInput" placeholder="اكتب تعليقاً على الستوري..." class="flex-1 bg-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none" />
+        <button onclick="sendStoryReply()" class="px-3 py-2 rounded-xl accent-gradient text-xs font-bold text-white">إرسال</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. عارض الشورت العمودي مع التقليب والحذف والإبلاغ -->
+  <div id="shortsViewerModal" class="hidden fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-2">
+    <div class="relative w-full max-w-md h-[90vh] bg-zinc-900 rounded-3xl overflow-hidden border border-white/10 flex flex-col anim-modal">
+      <div class="absolute top-3 inset-x-3 z-20 flex items-center justify-between">
+        <span class="px-3 py-1 rounded-full bg-black/65 text-xs font-bold text-pink-400"><i class="fa-solid fa-clapperboard ml-1"></i> شورت السيرفر</span>
+        <div class="flex items-center gap-1.5">
+          <button onclick="openModal('uploadShortModal')" class="px-3 py-1 rounded-full accent-gradient text-xs font-bold text-white">+ نشر شورت</button>
+          <button onclick="closeModal('shortsViewerModal')" class="w-8 h-8 rounded-full bg-black/65 text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div id="shortStage" class="flex-1 flex items-center justify-center bg-black relative"></div>
+
+      <div class="p-4 bg-zinc-950 border-t border-white/10 flex items-center justify-between">
+        <div class="min-w-0 flex-1 pl-2">
+          <div id="shortAuthorLabel" class="text-xs font-bold text-white truncate">@user</div>
+          <p id="shortCaptionLabel" class="text-xs text-gray-400 mt-0.5 truncate">وصف الشورت</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="prevShort()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center" title="السابق"><i class="fa-solid fa-chevron-up"></i></button>
+          <button onclick="nextShort()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center" title="التالي"><i class="fa-solid fa-chevron-down"></i></button>
+          <button onclick="reportCurrentShort()" class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center" title="إبلاغ"><i class="fa-solid fa-flag"></i></button>
+          <button id="btnDeleteCurrentShort" onclick="deleteCurrentShort()" class="hidden w-10 h-10 rounded-full bg-rose-600 text-white flex items-center justify-center" title="حذف الشورت"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. إعدادات السيرفر المتكاملة (عام، رتب وصلاحيات، إيموجيات متحركة، أعضاء، AutoMod، حذف) -->
+  <div id="serverSettingsModal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-3">
+    <div class="w-full max-w-2xl h-[82vh] bg-app-secondary border border-white/10 rounded-3xl flex flex-col overflow-hidden anim-modal">
+      <div class="h-14 px-5 border-b border-white/5 flex items-center justify-between shrink-0">
+        <h3 class="font-extrabold text-base">إعدادات السيرفر</h3>
+        <button onclick="closeModal('serverSettingsModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="flex gap-1.5 px-4 py-2 bg-app-tertiary border-b border-white/5 overflow-x-auto shrink-0">
+        <button onclick="renderServerSettingsTab('general')" class="px-3 py-1.5 rounded-xl bg-white/10 text-xs font-bold">عام والرابط</button>
+        <button onclick="renderServerSettingsTab('roles')" class="px-3 py-1.5 rounded-xl bg-white/10 text-xs font-bold">الرتب والصلاحيات</button>
+        <button onclick="renderServerSettingsTab('emojis')" class="px-3 py-1.5 rounded-xl bg-white/10 text-xs font-bold">إيموجيات السيرفر</button>
+        <button onclick="renderServerSettingsTab('automod')" class="px-3 py-1.5 rounded-xl bg-white/10 text-xs font-bold">AutoMod السيرفر</button>
+      </div>
+      <div id="serverSettingsBody" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- 6. نوافذ إنشاء سيرفر، استكشاف، ستوري، شورت، إيموجي/ملصق، قروبات، مثبتات، وبلاغات الإدارة -->
+  <div id="createServerModal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-app-secondary border border-white/10 rounded-3xl p-5 anim-modal">
+      <h3 class="font-extrabold text-base mb-4">إنشاء سيرفر جديد</h3>
+      <form onsubmit="createServer(event)" class="space-y-3">
+        <input type="text" id="newServerName" required placeholder="اسم السيرفر (مثال: مجتمع المبرمجين)" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm" />
+        <input type="url" id="newServerIcon" placeholder="رابط صورة السيرفر (اختياري)" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm" />
+        <select id="newServerType" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm">
+          <option value="public">🌐 سيرفر عام (يظهر في البحث ومفتوح للجميع)</option>
+          <option value="private">🔒 سيرفر خاص (مخفي من البحث — بالدعوة أو الـ ID فقط)</option>
+        </select>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('createServerModal')" class="px-4 py-2 rounded-xl bg-white/5 text-xs">إلغاء</button>
+          <button type="submit" class="px-5 py-2 rounded-xl accent-gradient text-xs font-bold text-white">إنشاء السيرفر</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="exploreServersModal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-app-secondary border border-white/10 rounded-3xl p-5 anim-modal">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-extrabold text-base">استكشاف السيرفرات العامة أو الانضمام برقم ID</h3>
+        <button onclick="closeModal('exploreServersModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="flex gap-2 mb-4">
+        <input type="text" id="joinByServerIdInput" placeholder="أدخل رقم ID السيرفر أو رابط الدعوة للانضمام..." class="flex-1 px-3.5 py-2 rounded-xl bg-app-tertiary border border-white/10 text-xs" />
+        <button onclick="joinServerByCodeInput()" class="px-4 py-2 rounded-xl accent-gradient text-xs font-bold text-white">انضمام</button>
+      </div>
+      <div id="publicServersGrid" class="space-y-2.5 max-h-72 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <div id="createStoryModal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-app-secondary border border-white/10 rounded-3xl p-5 anim-modal">
+      <h3 class="font-extrabold text-base mb-3">نشر ستوري جديد (24 ساعة)</h3>
+      <form onsubmit="publishStory(event)" class="space-y-3">
+        <textarea id="storyTextContent" rows="3" placeholder="اكتب نص الستوري أو أرفق صورة/فيديو..." class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm"></textarea>
+        <input type="file" id="storyMediaFile" accept="image/*,video/*" class="w-full text-xs text-gray-300" />
+        <select id="storyVisibility" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm">
+          <option value="friends">للأصدقاء فقط</option>
+          <option value="public">ستوري عام للجميع</option>
+        </select>
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="closeModal('createStoryModal')" class="px-4 py-2 rounded-xl bg-white/5 text-xs">إلغاء</button>
+          <button type="submit" class="px-5 py-2 rounded-xl accent-gradient text-xs font-bold text-white">نشر الستوري</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="uploadShortModal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-app-secondary border border-white/10 rounded-3xl p-5 anim-modal">
+      <h3 class="font-extrabold text-base mb-3">رفع شورت للسيرفر</h3>
+      <form onsubmit="publishServerShort(event)" class="space-y-3">
+        <input type="text" id="shortCaptionInput" required placeholder="وصف قصير للفيديو..." class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm" />
+        <input type="file" id="shortVideoFile" accept="video/*,image/*" required class="w-full text-xs text-gray-300" />
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="closeModal('uploadShortModal')" class="px-4 py-2 rounded-xl bg-white/5 text-xs">إلغاء</button>
+          <button type="submit" class="px-5 py-2 rounded-xl accent-gradient text-xs font-bold text-white">نشر</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="addCustomAssetModal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-app-secondary border border-white/10 rounded-3xl p-5 anim-modal">
+      <h3 class="font-extrabold text-base mb-3">إضافة إيموجي متحرك أو ملصق</h3>
+      <form onsubmit="saveCustomEmojiOrSticker(event)" class="space-y-3">
+        <select id="assetTypeSelect" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm">
+          <option value="emoji">إيموجي (يدعم الصور المتحركة GIF / WebP)</option>
+          <option value="sticker">ملصق كبير (Sticker)</option>
+        </select>
+        <input type="text" id="assetNameInput" required placeholder="اسم الإيموجي (مثال: party)" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm" />
+        <input type="url" id="assetUrlInput" placeholder="رابط الصورة المتحركة GIF أو اختر ملفاً أدناه" class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm" />
+        <input type="file" id="assetFileInput" accept="image/*" class="w-full text-xs text-gray-300" />
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="closeModal('addCustomAssetModal')" class="px-4 py-2 rounded-xl bg-white/5 text-xs">إلغاء</button>
+          <button type="submit" class="px-5 py-2 rounded-xl accent-gradient text-xs font-bold text-white">حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="groupModal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-app-secondary border border-white/10 rounded-3xl p-5 anim-modal">
+      <h3 id="groupModalTitle" class="font-extrabold text-base mb-2">إنشاء قروب خاص (الأصدقاء فقط)</h3>
+      <p class="text-xs text-gray-400 mb-3">يُسمح بإضافة أصدقائك وجهات اتصالك فقط.</p>
+      <input type="text" id="newGroupName" placeholder="اسم القروب..." class="w-full px-4 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-sm mb-3" />
+      <div id="friendsChecklistForGroup" class="space-y-2 max-h-56 overflow-y-auto mb-4"></div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeModal('groupModal')" class="px-4 py-2 rounded-xl bg-white/5 text-xs">إلغاء</button>
+        <button id="btnConfirmGroupAction" onclick="createFriendsGroup()" class="px-5 py-2 rounded-xl accent-gradient text-xs font-bold text-white">تأكيد</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pinnedMessagesModal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-app-secondary border border-white/10 rounded-3xl p-5 anim-modal">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-extrabold text-base"><i class="fa-solid fa-thumbtack text-amber-400 ml-1"></i> الرسائل المثبتة</h3>
+        <button onclick="closeModal('pinnedMessagesModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="pinnedMessagesList" class="space-y-2 max-h-72 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- لوحة البلاغات للإدارة العليا (مخفية تماماً عن الأعضاء) -->
+  <div id="adminReportsModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-app-secondary border border-rose-500/30 rounded-3xl p-5 anim-modal">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-extrabold text-base text-rose-400"><i class="fa-solid fa-shield-halved ml-1"></i> مركز البلاغات والمراجعة الذكية (Admin)</h3>
+        <button onclick="closeModal('adminReportsModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="adminReportsList" class="space-y-3 max-h-96 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- إشعار مكالمة واردة -->
+  <div id="incomingCallModal" class="hidden fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
+    <div class="w-full max-w-xs bg-app-secondary border border-emerald-500/40 rounded-3xl p-6 text-center shadow-2xl anim-ring">
+      <img id="callerAvatar" src="" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-emerald-500 object-cover" />
+      <h4 id="callerName" class="font-extrabold text-base">مكالمة واردة</h4>
+      <p id="callerTypeLabel" class="text-xs text-emerald-400 mt-1 mb-5">يدعوك لمكالمة صوتية...</p>
+      <div class="flex justify-center gap-4">
+        <button onclick="rejectIncomingCall()" class="w-12 h-12 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-phone-slash"></i></button>
+        <button onclick="acceptIncomingCall()" class="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-phone"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= منطق التطبيق و Firebase ================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, reauthenticateWithCredential, EmailAuthProvider, deleteUser } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, onSnapshot, getDocs, serverTimestamp, arrayUnion, arrayRemove, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBF9Xdqtg_0buaalRYHZJau-GY0Us5vkRA",
+      authDomain: "pattern-8ba7c.firebaseapp.com",
+      projectId: "pattern-8ba7c",
+      storageBucket: "pattern-8ba7c.firebasestorage.app",
+      messagingSenderId: "842871744550",
+      appId: "1:842871744550:web:e1338ffdfca5405c665ee7",
+      measurementId: "G-G1VXWW8V8K"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const SUPER_ADMIN_EMAIL = "admin@loliq12.github.io";
+
+    // الحالة العامة للتطبيق
+    let currentUser = null;
+    let currentUserProfile = null;
+    let isSuperAdmin = false;
+
+    let currentContext = "general"; // general | dms | server
+    let activeSubscriptionKey = "";
+    let activeServerId = null;
+    let activeServerData = null;
+    let activeChannelId = null;
+    let activeChannelData = null;
+    let activeDmChatId = null;
+    let activeDmPeerData = null;
+    let activeGroupMembers = [];
+
+    let unsubMessages = null;
+    let unsubChannels = null;
+    let unsubStories = null;
+    let unsubReports = null;
+    let unsubIncomingCalls = null;
+
+    let currentMessagesSnapshotDocs = [];
+    let pendingAttachments = [];
+    let editingMessageId = null;
+    let allUsersCache = {};
+    let serversCache = {};
+    let globalBadWords = ["شتيمة", "إباحي", "احا", "كس", "زب"];
+    let customEmojis = [];
+    let customStickers = [];
+
+    // الستوريات والشورت
+    let groupedStoriesMap = {};
+    let activeStoryUserQueue = [];
+    let activeStoryIndex = 0;
+    let serverShortsList = [];
+    let currentShortIndex = 0;
+
+    // WebRTC والصوتيات
+    let localStream = null;
+    let activeCallDocId = null;
+    let isMicMuted = false;
+    let isDeafened = false;
+    let incomingCallData = null;
+
+    function generateNumericId() {
+      return Math.floor(100000000000 + Math.random() * 900000000000).toString();
+    }
+
+    // تطبيق الإعدادات المحلية (الخط، الثيم، شكل الواجهة)
+    function applySavedPreferences() {
+      const savedFont = localStorage.getItem("nabd_font");
+      if (savedFont) document.documentElement.style.setProperty("--app-font", savedFont);
+
+      const c1 = localStorage.getItem("nabd_accent1");
+      const c2 = localStorage.getItem("nabd_accent2");
+      if (c1 && c2) {
+        document.documentElement.style.setProperty("--accent-1", c1);
+        document.documentElement.style.setProperty("--accent-2", c2);
+      }
+
+      const wallpaper = localStorage.getItem("nabd_wallpaper");
+      if (wallpaper) {
+        document.documentElement.style.setProperty("--bg-wallpaper", `url('${wallpaper}')`);
+      }
+
+      const layout = localStorage.getItem("nabd_layout") || "classic";
+      document.body.classList.remove("layout-classic", "layout-modern");
+      document.body.classList.add(`layout-${layout}`);
+    }
+    applySavedPreferences();
+
+    window.showToast = (msg, type = "info") => {
+      const container = document.getElementById("toastContainer");
+      const colors = {
+        info: "bg-indigo-600/95 border-indigo-400/40",
+        success: "bg-emerald-600/95 border-emerald-400/40",
+        error: "bg-rose-600/95 border-rose-400/40",
+        warn: "bg-amber-600/95 border-amber-400/40"
+      };
+      const el = document.createElement("div");
+      el.className = `${colors[type] || colors.info} border text-white px-4 py-3 rounded-2xl shadow-xl text-xs font-bold flex items-center justify-between anim-modal pointer-events-auto`;
+      el.innerHTML = `<span>${escapeHTML(msg)}</span><button onclick="this.parentElement.remove()" class="mr-3 opacity-75 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>`;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 4200);
+    };
+
+    function playNotificationSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(640, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(860, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.07, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.19);
+      } catch (e) {}
+    }
+
+    function escapeHTML(str) {
+      if (!str) return "";
+      return String(str).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+    }
+
+    function getAvatarUrl(user) {
+      if (user && user.photoURL) return user.photoURL;
+      const letter = (user && user.displayName) ? user.displayName.charAt(0).toUpperCase() : "ن";
+      return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' rx='40' fill='%235865F2'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='34' font-family='Arial' font-weight='bold'%3E${encodeURIComponent(letter)}%3C/text%3E%3C/svg%3E`;
+    }
+
+    // تنقية الصور الثابتة عبر Canvas لحمايتها من أي أكواد خبيثة (مع الحفاظ على حركة GIF/WebP)
+    async function sanitizeStaticImage(file) {
+      if (file.type === "image/gif" || file.type === "image/webp") {
+        return new Promise(res => {
+          const r = new FileReader();
+          r.onload = () => res(r.result);
+          r.readAsDataURL(file);
+        });
+      }
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const maxDim = 960;
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("ملف صورة غير صالح")); };
+        img.src = url;
+      });
+    }
+
+    // ================= المصادقة، 2FA، واستعادة كلمة المرور =================
+    window.switchAuthTab = (tab) => {
+      const isLogin = tab === "login";
+      document.getElementById("loginForm").classList.toggle("hidden", !isLogin);
+      document.getElementById("registerForm").classList.toggle("hidden", isLogin);
+      document.getElementById("tabLogin").className = isLogin ? "py-2 text-sm font-bold rounded-lg accent-gradient text-white transition" : "py-2 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition";
+      document.getElementById("tabRegister").className = !isLogin ? "py-2 text-sm font-bold rounded-lg accent-gradient text-white transition" : "py-2 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition";
+    };
+
+    window.handleForgotPassword = async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      if (!email) return showToast("اكتب بريدك الإلكتروني في الخانة أولاً ثم اضغط نسيت كلمة المرور.", "warn");
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showToast("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني!", "success");
+      } catch (err) {
+        showToast("تعذر الإرسال: " + err.message, "error");
+      }
+    };
+
+    window.handleLogin = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPassword").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        showToast("أهلاً بك في نبض شات!", "success");
+      } catch (err) {
+        showToast("خطأ في تسجيل الدخول: " + err.message, "error");
+      }
+    };
+
+    window.handleRegister = async (e) => {
+      e.preventDefault();
+      const displayName = document.getElementById("regDisplayName").value.trim();
+      const username = document.getElementById("regUsername").value.trim().toLowerCase();
+      const email = document.getElementById("regEmail").value.trim();
+      const pass = document.getElementById("regPassword").value;
+
+      try {
+        const unameRef = doc(db, "usernames", username);
+        const unameSnap = await getDoc(unameRef);
+        if (unameSnap.exists()) return showToast("اسم المستخدم هذا محجوز مسبقاً!", "error");
+
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        const uid = cred.user.uid;
+        const adminFlag = email.toLowerCase() === SUPER_ADMIN_EMAIL;
+
+        await setDoc(unameRef, { uid });
+        await setDoc(doc(db, "users", uid), {
+          uid,
+          numericId: generateNumericId(),
+          displayName,
+          username,
+          email: email.toLowerCase(),
+          about: "مرحباً! أنا أستخدم نبض شات.",
+          photoURL: "",
+          bannerURL: "",
+          isPrivate: false,
+          twoFactorSecret: "",
+          friends: [],
+          friendRequests: [],
+          blockedUsers: [],
+          joinedServers: [],
+          isBanned: false,
+          isSuperAdmin: adminFlag,
+          timestamp: Date.now()
+        });
+
+        showToast("تم إنشاء حسابك بنجاح!", "success");
+      } catch (err) {
+        showToast("خطأ في التسجيل: " + err.message, "error");
+      }
+    };
+
+    window.handleLogout = async () => {
+      await signOut(auth);
+      location.reload();
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        document.getElementById("authScreen").classList.remove("hidden");
+        document.getElementById("mainApp").classList.add("hidden");
+        return;
+      }
+
+      currentUser = user;
+      isSuperAdmin = (user.email || "").toLowerCase() === SUPER_ADMIN_EMAIL;
+
+      const userRef = doc(db, "users", user.uid);
+      onSnapshot(userRef, async (snap) => {
+        if (!snap.exists()) {
+          await setDoc(userRef, {
+            uid: user.uid,
+            numericId: generateNumericId(),
+            displayName: isSuperAdmin ? "الإدارة العليا" : user.email.split("@")[0],
+            username: isSuperAdmin ? "admin" : ("user_" + user.uid.slice(0, 5)),
+            email: user.email.toLowerCase(),
+            about: isSuperAdmin ? "الحساب الرسمي للإدارة العليا." : "",
+            photoURL: "",
+            bannerURL: "",
+            isPrivate: false,
+            twoFactorSecret: "",
+            friends: [],
+            friendRequests: [],
+            blockedUsers: [],
+            joinedServers: [],
+            isBanned: false,
+            isSuperAdmin,
+            timestamp: Date.now()
+          });
+          return;
+        }
+
+        currentUserProfile = snap.data();
+        if (currentUserProfile.isBanned && !isSuperAdmin) {
+          showToast("تم حظر حسابك من المنصة.", "error");
+          await signOut(auth);
+          return;
+        }
+
+        updateMyUI();
+      });
+
+      document.getElementById("authScreen").classList.add("hidden");
+      document.getElementById("mainApp").classList.remove("hidden");
+
+      initAppListeners();
+      // التحقق من وجود رابط دعوة سيرفر في عنوان الصفحة
+      if (location.hash.startsWith("#invite=")) {
+        const invId = location.hash.replace("#invite=", "").trim();
+        if (invId) joinServerById(invId);
+      } else {
+        selectContext("general");
+      }
+    });
+
+    function updateMyUI() {
+      if (!currentUserProfile) return;
+      document.getElementById("myDisplayName").textContent = currentUserProfile.displayName;
+      document.getElementById("myUsernameLabel").textContent = "@" + currentUserProfile.username;
+      document.getElementById("myAvatarImg").src = getAvatarUrl(currentUserProfile);
+
+      // إظهار أزرار الإدارة العليا فقط لصاحب الإيميل الإداري وإخفاؤها تماماً عن الأعضاء
+      document.getElementById("superAdminCrown").classList.toggle("hidden", !isSuperAdmin);
+      document.getElementById("btnSuperAdminReports").classList.toggle("hidden", !isSuperAdmin);
+      document.getElementById("stab-automod").classList.toggle("hidden", !isSuperAdmin);
+
+      const reqCount = (currentUserProfile.friendRequests || []).length;
+      const badge = document.getElementById("friendReqBadge");
+      badge.textContent = reqCount;
+      badge.classList.toggle("hidden", reqCount === 0);
+
+      renderJoinedServersRail();
+      if (currentContext === "dms") renderDmsSidebar();
+    }
+
+    function initAppListeners() {
+      onSnapshot(collection(db, "users"), (snap) => {
+        snap.forEach(d => { allUsersCache[d.id] = d.data(); });
+        if (currentContext === "general") renderOnlineUsersSidebar();
+      });
+
+      onSnapshot(collection(db, "servers"), (snap) => {
+        serversCache = {};
+        snap.forEach(d => { serversCache[d.id] = { id: d.id, ...d.data() }; });
+        renderJoinedServersRail();
+      });
+
+      onSnapshot(doc(db, "settings", "global_automod"), (snap) => {
+        if (snap.exists() && Array.isArray(snap.data().words)) {
+          globalBadWords = snap.data().words;
+        }
+      }, () => {});
+
+      onSnapshot(collection(db, "custom_assets"), (snap) => {
+        customEmojis = [];
+        customStickers = [];
+        snap.forEach(d => {
+          const item = { id: d.id, ...d.data() };
+          if (item.type === "sticker") customStickers.push(item);
+          else customEmojis.push(item);
+        });
+      });
+
+      listenToStories();
+
+      if (isSuperAdmin) {
+        unsubReports = onSnapshot(collection(db, "reports"), (snap) => {
+          const pending = snap.docs.filter(d => d.data().status === "pending");
+          const b = document.getElementById("reportsCountBadge");
+          b.textContent = pending.length;
+          b.classList.toggle("hidden", pending.length === 0);
+          renderAdminReports(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        });
+      }
+
+      unsubIncomingCalls = onSnapshot(query(collection(db, "calls"), where("calleeId", "==", currentUser.uid), where("status", "==", "ringing")), (snap) => {
+        if (!snap.empty) {
+          const callDoc = snap.docs[0];
+          incomingCallData = { id: callDoc.id, ...callDoc.data() };
+          document.getElementById("callerName").textContent = incomingCallData.callerName || "مستخدم";
+          document.getElementById("callerAvatar").src = incomingCallData.callerAvatar || getAvatarUrl({});
+          document.getElementById("callerTypeLabel").textContent = incomingCallData.isVideo ? "مكالمة فيديو واردة..." : "مكالمة صوتية واردة...";
+          document.getElementById("incomingCallModal").classList.remove("hidden");
+          playNotificationSound();
+        } else {
+          document.getElementById("incomingCallModal").classList.add("hidden");
+        }
+      });
+    }
+
+    // ================= التنقل بين السياقات وعزل الرسائل التام =================
+    window.selectContext = (ctx, serverId = null) => {
+      currentContext = ctx;
+      activeServerId = serverId;
+      activeChannelId = null;
+      activeDmChatId = null;
+      cancelEditMessage();
+
+      document.getElementById("btnDmVoiceCall").classList.add("hidden");
+      document.getElementById("btnDmVideoCall").classList.add("hidden");
+      document.getElementById("btnAddGroupMember").classList.add("hidden");
+      document.getElementById("btnOpenShorts").classList.add("hidden");
+      document.getElementById("btnServerSettings").classList.add("hidden");
+      document.getElementById("btnToggleLockChat").classList.add("hidden");
+      document.getElementById("sidebarPrivacyBadge").classList.add("hidden");
+      document.getElementById("channelLockedBanner").classList.add("hidden");
+      document.getElementById("messageInputArea").classList.remove("hidden");
+
+      if (ctx === "general") {
+        document.getElementById("sidebarTitle").textContent = "الشات العام";
+        document.getElementById("chatHeaderTitle").textContent = "الشات العام";
+        document.getElementById("chatHeaderSub").textContent = "مساحة التواصل المفتوحة للجميع";
+        document.getElementById("chatHeaderIcon").innerHTML = `<i class="fa-solid fa-earth-americas"></i>`;
+        document.getElementById("sidebarContent").innerHTML = `
+          <div class="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-gray-300 space-y-1.5">
+            <div class="font-bold text-indigo-400"><i class="fa-solid fa-shield-halved ml-1"></i> الشات العام</div>
+            <p class="leading-relaxed text-[11px]">مساحة تواصل جماعية. يدعم المنشن، الإيموجيات المتحركة من سيرفراتك، والملصقات.</p>
+          </div>
+          <div class="pt-2">
+            <div class="text-xs font-bold text-gray-400 mb-2">الأعضاء في المنصة</div>
+            <div id="onlineUsersSidebarList" class="space-y-1"></div>
+          </div>`;
+        renderOnlineUsersSidebar();
+        subscribeToMessages(collection(db, "general_messages"), "general");
+      } else if (ctx === "dms") {
+        document.getElementById("sidebarTitle").textContent = "الأصدقاء والخاص";
+        document.getElementById("chatHeaderTitle").textContent = "الرسائل الخاصة والقروبات";
+        document.getElementById("chatHeaderSub").textContent = "اختر صديقاً أو قروباً لبدء المحادثة";
+        document.getElementById("chatHeaderIcon").innerHTML = `<i class="fa-solid fa-user-group"></i>`;
+        if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+        document.getElementById("messagesList").innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-400 text-xs gap-2"><i class="fa-regular fa-comments text-3xl opacity-50"></i><span>اختر محادثة من القائمة الجانبية</span></div>`;
+        renderDmsSidebar();
+      } else if (ctx === "server" && serverId) {
+        loadServerContext(serverId);
+      }
+    };
+
+    function renderOnlineUsersSidebar() {
+      const container = document.getElementById("onlineUsersSidebarList");
+      if (!container) return;
+      const blocked = currentUserProfile?.blockedUsers || [];
+      const users = Object.values(allUsersCache).filter(u => !blocked.includes(u.uid));
+      container.innerHTML = users.map(u => `
+        <div onclick="openUserProfileModal('${u.uid}')" class="flex items-center gap-2.5 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition">
+          <img src="${getAvatarUrl(u)}" class="w-8 h-8 rounded-full object-cover" />
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1">
+              <span class="text-xs font-bold truncate">${escapeHTML(u.displayName)}</span>
+              ${u.isSuperAdmin ? `<i class="fa-solid fa-crown text-amber-400 text-[10px]"></i>` : ""}
+            </div>
+            <div class="text-[10px] text-gray-400 truncate" dir="ltr">@${escapeHTML(u.username)}</div>
+          </div>
+        </div>`).join("");
+    }
+
+    // ================= الأصدقاء، الحساب الخاص، الحظر، والقروبات =================
+    function renderDmsSidebar() {
+      const friends = currentUserProfile?.friends || [];
+      const requests = currentUserProfile?.friendRequests || [];
+      const sidebar = document.getElementById("sidebarContent");
+      if (!sidebar) return;
+
+      sidebar.innerHTML = `
+        <div class="space-y-3">
+          <div class="flex gap-1.5">
+            <input type="text" id="addFriendUsernameInput" placeholder="أضف صديق عبر @username" class="flex-1 px-3 py-2 rounded-xl bg-app-tertiary border border-white/10 text-xs focus:outline-none" />
+            <button onclick="sendFriendRequestByUsername()" class="px-3 py-2 rounded-xl accent-gradient text-white text-xs font-bold" title="إرسال طلب صداقة"><i class="fa-solid fa-user-plus"></i></button>
+          </div>
+
+          <button onclick="openCreateGroupModal()" class="w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-indigo-300 flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-users"></i> <span>إنشاء قروب (الأصدقاء فقط)</span>
+          </button>
+
+          ${requests.length ? `
+            <div>
+              <div class="text-[11px] font-bold text-amber-400 mb-1.5">طلبات الصداقة (${requests.length})</div>
+              <div class="space-y-1.5">
+                ${requests.map(reqUid => {
+                  const u = allUsersCache[reqUid] || { uid: reqUid, displayName: "مستخدم", username: "user" };
+                  return `
+                    <div class="p-2 rounded-xl bg-app-tertiary flex items-center justify-between">
+                      <div onclick="openUserProfileModal('${reqUid}')" class="flex items-center gap-2 cursor-pointer truncate">
+                        <img src="${getAvatarUrl(u)}" class="w-7 h-7 rounded-full object-cover" />
+                        <span class="text-xs font-bold truncate">${escapeHTML(u.displayName)}</span>
+                      </div>
+                      <div class="flex gap-1">
+                        <button onclick="acceptFriendRequest('${reqUid}')" class="px-2 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold">قبول</button>
+                        <button onclick="rejectFriendRequest('${reqUid}')" class="px-2 py-1 rounded-lg bg-rose-600 text-white text-[10px] font-bold">رفض</button>
+                      </div>
+                    </div>`;
+                }).join("")}
+              </div>
+            </div>` : ""}
+
+          <div>
+            <div class="text-[11px] font-bold text-gray-400 mb-1.5">الأصدقاء (${friends.length})</div>
+            <div class="space-y-1">
+              ${friends.length === 0 ? `<p class="text-xs text-gray-500 text-center py-3">لا يوجد أصدقاء بعد.</p>` : friends.map(fUid => {
+                const f = allUsersCache[fUid] || { uid: fUid, displayName: "صديق", username: "friend" };
+                return `
+                  <div onclick="openDirectChat('${fUid}')" class="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 cursor-pointer transition">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <img src="${getAvatarUrl(f)}" class="w-8 h-8 rounded-full object-cover" />
+                      <div class="truncate">
+                        <div class="text-xs font-bold truncate">${escapeHTML(f.displayName)}</div>
+                        <div class="text-[10px] text-gray-400 truncate" dir="ltr">@${escapeHTML(f.username)}</div>
+                      </div>
+                    </div>
+                    <i class="fa-solid fa-comment text-xs text-indigo-400"></i>
+                  </div>`;
+              }).join("")}
+            </div>
+          </div>
+
+          <div id="myGroupsSection"></div>
+        </div>`;
+      loadUserGroupsList();
+    }
+
+    async function loadUserGroupsList() {
+      const q = query(collection(db, "chats"), where("isGroup", "==", true), where("members", "array-contains", currentUser.uid));
+      const snap = await getDocs(q);
+      const box = document.getElementById("myGroupsSection");
+      if (!box) return;
+      if (snap.empty) { box.innerHTML = ""; return; }
+      box.innerHTML = `<div class="text-[11px] font-bold text-gray-400 mb-1.5 mt-3">القروبات الخاصة (${snap.size})</div>` + snap.docs.map(d => {
+        const g = d.data();
+        return `<div onclick='openGroupChat("${d.id}", ${JSON.stringify(g.groupName)}, ${JSON.stringify(g.members || [])})' class="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 cursor-pointer">
+          <div class="w-8 h-8 rounded-xl accent-gradient flex items-center justify-center text-white text-xs font-bold"><i class="fa-solid fa-users"></i></div>
+          <span class="text-xs font-bold truncate">${escapeHTML(g.groupName)}</span>
+        </div>`;
+      }).join("");
+    }
+
+    window.sendFriendRequestByUsername = async () => {
+      const uname = document.getElementById("addFriendUsernameInput").value.trim().replace(/^@/, "").toLowerCase();
+      if (!uname) return;
+      const uSnap = await getDoc(doc(db, "usernames", uname));
+      if (!uSnap.exists()) return showToast("لم يتم العثور على مستخدم بهذا اليوزر", "error");
+      const targetUid = uSnap.data().uid;
+      if (targetUid === currentUser.uid) return showToast("لا يمكنك إضافة نفسك!", "warn");
+      await sendFriendRequestToUid(targetUid);
+      document.getElementById("addFriendUsernameInput").value = "";
+    };
+
+    window.sendFriendRequestToUid = async (targetUid) => {
+      if (targetUid === currentUser.uid) return;
+      const blocked = currentUserProfile?.blockedUsers || [];
+      if (blocked.includes(targetUid)) return showToast("لقد قمت بحظر هذا المستخدم، فك الحظر أولاً.", "warn");
+      await updateDoc(doc(db, "users", targetUid), {
+        friendRequests: arrayUnion(currentUser.uid)
+      });
+      showToast("تم إرسال طلب الصداقة!", "success");
+    };
+
+    window.acceptFriendRequest = async (reqUid) => {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        friendRequests: arrayRemove(reqUid),
+        friends: arrayUnion(reqUid)
+      });
+      await updateDoc(doc(db, "users", reqUid), {
+        friends: arrayUnion(currentUser.uid)
+      });
+      showToast("أصبحتما أصدقاء الآن!", "success");
+    };
+
+    window.rejectFriendRequest = async (reqUid) => {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        friendRequests: arrayRemove(reqUid)
+      });
+      showToast("تم رفض الطلب", "info");
+    };
+
+    window.toggleBlockUser = async (targetUid) => {
+      const blocked = currentUserProfile?.blockedUsers || [];
+      const isBlocked = blocked.includes(targetUid);
+      if (isBlocked) {
+        await updateDoc(doc(db, "users", currentUser.uid), { blockedUsers: arrayRemove(targetUid) });
+        showToast("تم إلغاء الحظر عن المستخدم.", "success");
+      } else {
+        await updateDoc(doc(db, "users", currentUser.uid), {
+          blockedUsers: arrayUnion(targetUid),
+          friends: arrayRemove(targetUid),
+          friendRequests: arrayRemove(targetUid)
+        });
+        showToast("تم حظر المستخدم بنجاح.", "warn");
+      }
+      closeModal("userProfileModal");
+    };
+
+    window.openDirectChat = async (peerUid) => {
+      const peerSnap = await getDoc(doc(db, "users", peerUid));
+      if (!peerSnap.exists()) return;
+      const peer = peerSnap.data();
+
+      if ((currentUserProfile.blockedUsers || []).includes(peerUid) || (peer.blockedUsers || []).includes(currentUser.uid)) {
+        return showToast("لا يمكن المراسلة بسبب وجود حظر بين الطرفين.", "error");
+      }
+
+      const amIFriend = (currentUserProfile.friends || []).includes(peerUid);
+      if (peer.isPrivate && !amIFriend && !isSuperAdmin) {
+        return showToast("هذا الحساب خاص! أرسل طلب صداقة وانتظر القبول لمراسلته.", "warn");
+      }
+
+      activeDmPeerData = peer;
+      activeDmChatId = [currentUser.uid, peerUid].sort().join("_");
+
+      await setDoc(doc(db, "chats", activeDmChatId), {
+        members: [currentUser.uid, peerUid],
+        isGroup: false,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      document.getElementById("chatHeaderTitle").textContent = peer.displayName;
+      document.getElementById("chatHeaderSub").textContent = "@" + peer.username;
+      document.getElementById("chatHeaderIcon").innerHTML = `<img src="${getAvatarUrl(peer)}" class="w-8 h-8 rounded-full object-cover" />`;
+      document.getElementById("btnDmVoiceCall").classList.remove("hidden");
+      document.getElementById("btnDmVideoCall").classList.remove("hidden");
+      document.getElementById("btnAddGroupMember").classList.add("hidden");
+
+      toggleMobileDrawer(false);
+      subscribeToMessages(collection(db, "chats", activeDmChatId, "messages"), `dm_${activeDmChatId}`);
+    };
+
+    // إنشاء قروب أو إضافة أصدقاء للقروب (الأصدقاء وجهات الاتصال فقط)
+    window.openCreateGroupModal = () => {
+      document.getElementById("groupModalTitle").textContent = "إنشاء قروب خاص (الأصدقاء فقط)";
+      document.getElementById("newGroupName").classList.remove("hidden");
+      document.getElementById("btnConfirmGroupAction").onclick = createFriendsGroup;
+      renderFriendsChecklist([]);
+      openModal("groupModal");
+    };
+
+    window.openAddFriendToGroupModal = () => {
+      if (!activeDmChatId) return;
+      document.getElementById("groupModalTitle").textContent = "إضافة صديق إلى القروب";
+      document.getElementById("newGroupName").classList.add("hidden");
+      document.getElementById("btnConfirmGroupAction").onclick = addSelectedFriendsToCurrentGroup;
+      renderFriendsChecklist(activeGroupMembers);
+      openModal("groupModal");
+    };
+
+    function renderFriendsChecklist(excludeUids) {
+      const friends = (currentUserProfile.friends || []).filter(id => !excludeUids.includes(id));
+      const box = document.getElementById("friendsChecklistForGroup");
+      if (friends.length === 0) {
+        box.innerHTML = `<p class="text-xs text-amber-400">لا يوجد أصدقاء متاحون للإضافة.</p>`;
+      } else {
+        box.innerHTML = friends.map(fUid => {
+          const f = allUsersCache[fUid] || { displayName: "صديق" };
+          return `<label class="flex items-center gap-2.5 p-2 rounded-xl bg-app-tertiary cursor-pointer">
+            <input type="checkbox" value="${fUid}" class="group-friend-cb accent-indigo-500" />
+            <img src="${getAvatarUrl(f)}" class="w-6 h-6 rounded-full object-cover" />
+            <span class="text-xs font-bold">${escapeHTML(f.displayName)}</span>
+          </label>`;
+        }).join("");
+      }
+    }
+
+    window.createFriendsGroup = async () => {
+      const name = document.getElementById("newGroupName").value.trim() || "قروب الأصدقاء";
+      const selected = Array.from(document.querySelectorAll(".group-friend-cb:checked")).map(cb => cb.value);
+      if (selected.length === 0) return showToast("اختر صديقاً واحداً على الأقل!", "warn");
+
+      const members = [currentUser.uid, ...selected];
+      const chatRef = await addDoc(collection(db, "chats"), {
+        isGroup: true,
+        groupName: name,
+        ownerId: currentUser.uid,
+        members,
+        createdAt: serverTimestamp()
+      });
+      closeModal("groupModal");
+      showToast("تم إنشاء القروب بنجاح!", "success");
+      loadUserGroupsList();
+      openGroupChat(chatRef.id, name, members);
+    };
+
+    window.addSelectedFriendsToCurrentGroup = async () => {
+      const selected = Array.from(document.querySelectorAll(".group-friend-cb:checked")).map(cb => cb.value);
+      if (selected.length === 0 || !activeDmChatId) return;
+      await updateDoc(doc(db, "chats", activeDmChatId), {
+        members: arrayUnion(...selected)
+      });
+      activeGroupMembers.push(...selected);
+      closeModal("groupModal");
+      showToast("تمت إضافة الأصدقاء للقروب!", "success");
+    };
+
+    window.openGroupChat = (chatId, name, members = []) => {
+      activeDmChatId = chatId;
+      activeDmPeerData = null;
+      activeGroupMembers = members;
+      document.getElementById("chatHeaderTitle").textContent = name;
+      document.getElementById("chatHeaderSub").textContent = "قروب خاص للأصدقاء";
+      document.getElementById("chatHeaderIcon").innerHTML = `<i class="fa-solid fa-users"></i>`;
+      document.getElementById("btnDmVoiceCall").classList.add("hidden");
+      document.getElementById("btnDmVideoCall").classList.add("hidden");
+      document.getElementById("btnAddGroupMember").classList.remove("hidden");
+      toggleMobileDrawer(false);
+      subscribeToMessages(collection(db, "chats", chatId, "messages"), `group_${chatId}`);
+    };
+
+    // ================= السيرفرات (العامة والخاصة)، الأقسام، القنوات، الرتب =================
+    function renderJoinedServersRail() {
+      const rail = document.getElementById("joinedServersList");
+      const joined = currentUserProfile?.joinedServers || [];
+      rail.innerHTML = joined.map(sId => {
+        const s = serversCache[sId];
+        if (!s) return "";
+        const isActive = activeServerId === sId;
+        return `<button onclick="selectContext('server', '${sId}')" title="${escapeHTML(s.name)}" class="w-12 h-12 rounded-2xl ${isActive ? 'ring-2 ring-indigo-400 rounded-xl' : ''} bg-app-secondary overflow-hidden flex items-center justify-center shrink-0 hover:rounded-xl transition-all">
+          ${s.icon ? `<img src="${escapeHTML(s.icon)}" class="w-full h-full object-cover" />` : `<span class="font-extrabold text-sm">${escapeHTML(s.name.slice(0, 2))}</span>`}
+        </button>`;
+      }).join("");
+    }
+
+    window.createServer = async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("newServerName").value.trim();
+      const icon = document.getElementById("newServerIcon").value.trim();
+      const type = document.getElementById("newServerType").value;
+      const srvNumericId = generateNumericId();
+
+      const sRef = await addDoc(collection(db, "servers"), {
+        numericId: srvNumericId,
+        name,
+        icon,
+        type, // public | private
+        ownerId: currentUser.uid,
+        members: [currentUser.uid],
+        badWords: [],
+        roles: [{ id: generateNumericId(), name: "مشرف", color: "#5865f2", admin: true }],
+        createdAt: serverTimestamp()
+      });
+
+      await addDoc(collection(db, "servers", sRef.id, "channels"), {
+        numericId: generateNumericId(),
+        category: "القنوات الرئيسية",
+        name: "الدردشة-العامة",
+        type: "text",
+        isLocked: false
+      });
+      await addDoc(collection(db, "servers", sRef.id, "channels"), {
+        numericId: generateNumericId(),
+        category: "القنوات الصوتية",
+        name: "مجلس-الصوت",
+        type: "voice",
+        isLocked: false
+      });
+
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        joinedServers: arrayUnion(sRef.id)
+      });
+
+      closeModal("createServerModal");
+      showToast("تم إنشاء السيرفر بنجاح!", "success");
+      selectContext("server", sRef.id);
+    };
+
+    window.openModal = (id) => {
+      document.getElementById(id).classList.remove("hidden");
+      if (id === "exploreServersModal") renderPublicServersExplorer();
+    };
+    window.closeModal = (id) => document.getElementById(id).classList.add("hidden");
+
+    function renderPublicServersExplorer() {
+      const grid = document.getElementById("publicServersGrid");
+      // السيرفرات الخاصة (type === 'private') مخفية تماماً من البحث
+      const publicServers = Object.values(serversCache).filter(s => s.type !== "private");
+      grid.innerHTML = publicServers.length === 0 ? `<p class="text-xs text-gray-400 text-center py-6">لا توجد سيرفرات عامة متاحة حالياً.</p>` : publicServers.map(s => {
+        const joined = (currentUserProfile?.joinedServers || []).includes(s.id);
+        return `<div class="p-3 rounded-2xl bg-app-tertiary flex items-center justify-between border border-white/5">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-11 h-11 rounded-2xl accent-gradient flex items-center justify-center font-bold text-white overflow-hidden shrink-0">
+              ${s.icon ? `<img src="${escapeHTML(s.icon)}" class="w-full h-full object-cover" />` : escapeHTML(s.name.slice(0, 2))}
+            </div>
+            <div class="truncate">
+              <div class="text-sm font-bold truncate">${escapeHTML(s.name)}</div>
+              <div class="text-[11px] text-gray-400">🌐 عام • ${(s.members || []).length} عضو</div>
+            </div>
+          </div>
+          <button onclick="joinServerById('${s.id}')" class="px-4 py-2 rounded-xl ${joined ? 'bg-white/10 text-gray-300' : 'accent-gradient text-white'} text-xs font-bold shrink-0">
+            ${joined ? 'دخول' : 'انضمام'}
+          </button>
+        </div>`;
+      }).join("");
+    }
+
+    window.joinServerByCodeInput = async () => {
+      let raw = document.getElementById("joinByServerIdInput").value.trim();
+      if (!raw) return;
+      if (raw.includes("#invite=")) raw = raw.split("#invite=")[1].trim();
+      // البحث بالمعرف المستندي أو الرقمي
+      let targetSrv = serversCache[raw] || Object.values(serversCache).find(s => s.numericId === raw);
+      if (!targetSrv) return showToast("لم يتم العثور على سيرفر بهذا الرابط أو الرقم!", "error");
+      await joinServerById(targetSrv.id);
+    };
+
+    window.joinServerById = async (sId) => {
+      const sSnap = await getDoc(doc(db, "servers", sId));
+      if (!sSnap.exists()) return showToast("السيرفر غير موجود!", "error");
+      await updateDoc(doc(db, "users", currentUser.uid), { joinedServers: arrayUnion(sId) });
+      await updateDoc(doc(db, "servers", sId), { members: arrayUnion(currentUser.uid) });
+      closeModal("exploreServersModal");
+      selectContext("server", sId);
+    };
+
+    async function loadServerContext(sId) {
+      const sSnap = await getDoc(doc(db, "servers", sId));
+      if (!sSnap.exists()) return;
+      activeServerData = { id: sId, ...sSnap.data() };
+      const isOwnerOrAdmin = (activeServerData.ownerId === currentUser.uid || isSuperAdmin);
+
+      document.getElementById("sidebarTitle").textContent = activeServerData.name;
+      const pBadge = document.getElementById("sidebarPrivacyBadge");
+      pBadge.textContent = activeServerData.type === "private" ? "🔒 خاص" : "🌐 عام";
+      pBadge.classList.remove("hidden");
+
+      document.getElementById("btnOpenShorts").classList.remove("hidden");
+      document.getElementById("btnServerSettings").classList.toggle("hidden", !isOwnerOrAdmin);
+
+      if (unsubChannels) unsubChannels();
+      unsubChannels = onSnapshot(collection(db, "servers", sId, "channels"), (snap) => {
+        const channels = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderServerChannelsSidebar(channels, isOwnerOrAdmin);
+        if (!activeChannelId && channels.length > 0) {
+          const firstText = channels.find(c => c.type !== "voice") || channels[0];
+          selectServerChannel(firstText);
+        }
+      });
+    }
+
+    function renderServerChannelsSidebar(channels, isOwnerOrAdmin) {
+      const textCh = channels.filter(c => c.type !== "voice");
+      const voiceCh = channels.filter(c => c.type === "voice");
+
+      document.getElementById("sidebarContent").innerHTML = `
+        <div class="space-y-4">
+          <div class="p-2.5 rounded-xl bg-app-tertiary border border-white/5 flex items-center justify-between text-[11px]">
+            <span class="text-gray-400 font-mono">ID: ${activeServerData.numericId || activeServerData.id.slice(0, 8)}</span>
+            <button onclick="copyServerInviteLink()" class="text-indigo-400 hover:underline font-bold"><i class="fa-solid fa-link ml-1"></i>نسخ الدعوة</button>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between text-[11px] font-bold text-gray-400 mb-1.5">
+              <span>القنوات النصية (مفتوحة للجميع)</span>
+              ${isOwnerOrAdmin ? `<button onclick="promptCreateChannel('text')" class="hover:text-white px-1.5"><i class="fa-solid fa-plus"></i></button>` : ""}
+            </div>
+            <div class="space-y-1">
+              ${textCh.map(c => `
+                <button onclick='selectServerChannel(${JSON.stringify(c)})' class="w-full flex items-center justify-between px-3 py-2 rounded-xl ${activeChannelId === c.id ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5'} text-xs font-bold transition">
+                  <span class="truncate"><i class="fa-solid fa-hashtag ml-1.5 opacity-70"></i>${escapeHTML(c.name)}</span>
+                  ${c.isLocked ? `<i class="fa-solid fa-lock text-amber-400 text-[10px]"></i>` : ""}
+                </button>`).join("")}
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between text-[11px] font-bold text-gray-400 mb-1.5">
+              <span>القنوات الصوتية (WebRTC)</span>
+              ${isOwnerOrAdmin ? `<button onclick="promptCreateChannel('voice')" class="hover:text-white px-1.5"><i class="fa-solid fa-plus"></i></button>` : ""}
+            </div>
+            <div class="space-y-1">
+              ${voiceCh.map(c => `
+                <button onclick="joinVoiceRoom('${activeServerId}', '${c.id}', '${escapeHTML(c.name)}')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-emerald-400 hover:bg-emerald-500/10 text-xs font-bold transition">
+                  <span class="truncate"><i class="fa-solid fa-volume-high ml-1.5"></i>${escapeHTML(c.name)}</span>
+                  <span class="text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded-lg">اتصال</span>
+                </button>`).join("")}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    window.promptCreateChannel = async (type) => {
+      const name = prompt(type === "voice" ? "اسم القناة الصوتية:" : "اسم القناة النصية:");
+      if (!name || !activeServerId) return;
+      await addDoc(collection(db, "servers", activeServerId, "channels"), {
+        numericId: generateNumericId(),
+        name: name.trim(),
+        type,
+        isLocked: false
+      });
+      showToast("تم إنشاء القناة!", "success");
+    };
+
+    window.selectServerChannel = (channel) => {
+      activeChannelId = channel.id;
+      activeChannelData = channel;
+      const isOwnerOrAdmin = (activeServerData?.ownerId === currentUser.uid || isSuperAdmin);
+
+      document.getElementById("chatHeaderTitle").textContent = channel.name;
+      document.getElementById("chatHeaderSub").textContent = `${activeServerData?.name || "سيرفر"} • ID: ${channel.numericId || ""}`;
+      document.getElementById("chatHeaderIcon").innerHTML = `<i class="fa-solid fa-hashtag"></i>`;
+
+      const lockBtn = document.getElementById("btnToggleLockChat");
+      lockBtn.classList.toggle("hidden", !isOwnerOrAdmin);
+      lockBtn.innerHTML = channel.isLocked ? `<i class="fa-solid fa-lock"></i>` : `<i class="fa-solid fa-lock-open"></i>`;
+
+      // قفل الشات = منع الأعضاء العاديين من الكتابة
+      const isLockedForMe = channel.isLocked && !isOwnerOrAdmin;
+      document.getElementById("channelLockedBanner").classList.toggle("hidden", !isLockedForMe);
+      document.getElementById("messageInputArea").classList.toggle("hidden", isLockedForMe);
+
+      toggleMobileDrawer(false);
+      subscribeToMessages(collection(db, "servers", activeServerId, "channels", channel.id, "messages"), `srv_${activeServerId}_ch_${channel.id}`);
+    };
+
+    window.toggleChannelLock = async () => {
+      if (!activeServerId || !activeChannelId || !activeChannelData) return;
+      const newState = !activeChannelData.isLocked;
+      await updateDoc(doc(db, "servers", activeServerId, "channels", activeChannelId), { isLocked: newState });
+      activeChannelData.isLocked = newState;
+      selectServerChannel(activeChannelData);
+      showToast(newState ? "تم قفل الشات عن الأعضاء" : "تم فتح الشات للجميع", "info");
+    };
+
+    window.copyServerInviteLink = () => {
+      if (!activeServerId) return;
+      const link = `${location.origin}${location.pathname}#invite=${activeServerId}`;
+      const inp = document.createElement("input");
+      inp.value = link;
+      document.body.appendChild(inp);
+      inp.select();
+      document.execCommand("copy");
+      inp.remove();
+      showToast("تم نسخ رابط دعوة السيرفر!", "success");
+    };
+
+    // ================= إعدادات السيرفر (عام، رتب، إيموجيات، AutoMod، حذف) =================
+    window.openServerSettingsModal = () => {
+      if (!activeServerData) return;
+      openModal("serverSettingsModal");
+      renderServerSettingsTab("general");
+    };
+
+    window.renderServerSettingsTab = (tab) => {
+      const body = document.getElementById("serverSettingsBody");
+      if (tab === "general") {
+        body.innerHTML = `
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">اسم السيرفر</label>
+              <input type="text" id="editSrvName" value="${escapeHTML(activeServerData.name)}" class="w-full px-3.5 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">خصوصية السيرفر</label>
+              <select id="editSrvType" class="w-full px-3.5 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-xs">
+                <option value="public" ${activeServerData.type !== 'private' ? 'selected' : ''}>🌐 عام (يظهر في البحث)</option>
+                <option value="private" ${activeServerData.type === 'private' ? 'selected' : ''}>🔒 خاص (مخفي من البحث — بالدعوة فقط)</option>
+              </select>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+              <button onclick="saveServerGeneralSettings()" class="px-5 py-2.5 rounded-xl accent-gradient text-xs font-bold text-white">حفظ التعديلات</button>
+              <button onclick="deleteActiveServer()" class="px-4 py-2.5 rounded-xl bg-rose-600 text-xs font-bold text-white">حذف السيرفر نهائياً</button>
+            </div>
+          </div>`;
+      } else if (tab === "roles") {
+        const roles = activeServerData.roles || [];
+        body.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex gap-2">
+              <input type="text" id="newRoleName" placeholder="اسم الرتبة الجديدة..." class="flex-1 px-3 py-2 rounded-xl bg-app-tertiary border border-white/10 text-xs" />
+              <input type="color" id="newRoleColor" value="#5865f2" class="w-10 h-9 rounded-lg bg-transparent cursor-pointer" />
+              <button onclick="addServerRole()" class="px-4 py-2 rounded-xl accent-gradient text-xs font-bold text-white">إضافة رتبة</button>
+            </div>
+            <div class="space-y-2">
+              ${roles.map(r => `<div class="p-3 rounded-xl bg-app-tertiary flex items-center justify-between">
+                <span class="text-xs font-bold" style="color:${r.color}">${escapeHTML(r.name)} <span class="text-[10px] text-gray-500 font-mono">(ID: ${r.id})</span></span>
+              </div>`).join("")}
+            </div>
+          </div>`;
+      } else if (tab === "emojis") {
+        body.innerHTML = `
+          <div class="space-y-3">
+            <p class="text-xs text-gray-400">أضف إيموجيات ثابتة أو متحركة (GIF) للسيرفر ليستخدمها الأعضاء في السيرفر والشات العام والخاص:</p>
+            <button onclick="openModal('addCustomAssetModal')" class="px-4 py-2 rounded-xl accent-gradient text-xs font-bold text-white">+ رفع إيموجي جديد</button>
+          </div>`;
+      } else if (tab === "automod") {
+        const words = activeServerData.badWords || [];
+        body.innerHTML = `
+          <div class="space-y-3">
+            <p class="text-xs text-gray-400">كلمات محظورة داخل هذا السيرفر فقط:</p>
+            <div class="flex gap-2">
+              <input type="text" id="srvBadWordInput" placeholder="أضف كلمة ممنوعة..." class="flex-1 px-3 py-2 rounded-xl bg-app-tertiary border border-white/10 text-xs" />
+              <button onclick="addServerBadWord()" class="px-4 py-2 rounded-xl bg-rose-600 text-xs font-bold text-white">إضافة</button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              ${words.map(w => `<span class="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs">${escapeHTML(w)}</span>`).join("")}
+            </div>
+          </div>`;
+      }
+    };
+
+    window.saveServerGeneralSettings = async () => {
+      const name = document.getElementById("editSrvName").value.trim();
+      const type = document.getElementById("editSrvType").value;
+      await updateDoc(doc(db, "servers", activeServerId), { name, type });
+      activeServerData.name = name;
+      activeServerData.type = type;
+      showToast("تم حفظ إعدادات السيرفر!", "success");
+      loadServerContext(activeServerId);
+    };
+
+    window.addServerRole = async () => {
+      const name = document.getElementById("newRoleName").value.trim();
+      const color = document.getElementById("newRoleColor").value;
+      if (!name) return;
+      const roleObj = { id: generateNumericId(), name, color, admin: false };
+      await updateDoc(doc(db, "servers", activeServerId), { roles: arrayUnion(roleObj) });
+      activeServerData.roles = [...(activeServerData.roles || []), roleObj];
+      renderServerSettingsTab("roles");
+    };
+
+    window.addServerBadWord = async () => {
+      const w = document.getElementById("srvBadWordInput").value.trim();
+      if (!w) return;
+      await updateDoc(doc(db, "servers", activeServerId), { badWords: arrayUnion(w) });
+      activeServerData.badWords = [...(activeServerData.badWords || []), w];
+      renderServerSettingsTab("automod");
+    };
+
+    window.deleteActiveServer = async () => {
+      if (!activeServerId) return;
+      await deleteDoc(doc(db, "servers", activeServerId));
+      closeModal("serverSettingsModal");
+      selectContext("general");
+      showToast("تم حذف السيرفر.", "info");
+    };
+
+    // ================= إرسال واستقبال وعرض الرسائل (فرز رقمي فوري بدون أخطاء فهارس) =================
+    function subscribeToMessages(colRef, contextKey) {
+      if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+      activeSubscriptionKey = contextKey;
+
+      const list = document.getElementById("messagesList");
+      list.innerHTML = `<div class="text-center text-xs text-gray-500 py-8">جاري تحميل الرسائل...</div>`;
+
+      unsubMessages = onSnapshot(colRef, (snap) => {
+        if (activeSubscriptionKey !== contextKey) return;
+        currentMessagesSnapshotDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // فرز زمني فوري في المتصفح لضمان ظهور الرسائل بأجزاء من الثانية
+        currentMessagesSnapshotDocs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+        list.innerHTML = "";
+        if (currentMessagesSnapshotDocs.length === 0) {
+          list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-500 text-xs gap-2"><i class="fa-regular fa-comment-dots text-3xl opacity-40"></i><span>لا توجد رسائل بعد. ابدأ المحادثة الآن!</span></div>`;
+          return;
+        }
+
+        const blocked = currentUserProfile?.blockedUsers || [];
+        currentMessagesSnapshotDocs.forEach(msg => {
+          if (blocked.includes(msg.senderId)) return;
+          list.appendChild(renderMessageBubble(msg.id, msg, colRef));
+        });
+        list.scrollTop = list.scrollHeight;
+      }, (err) => {
+        showToast("خطأ في تحميل الرسائل: " + err.message, "error");
+      });
+    }
+
+    function renderMessageBubble(msgId, msg, colRef) {
+      const isMe = msg.senderId === currentUser.uid;
+      const wrapper = document.createElement("div");
+      // رسالتك على اليمين، رسائل الآخرين على اليسار
+      wrapper.className = `flex items-end gap-2.5 ${isMe ? 'justify-start flex-row' : 'justify-end flex-row-reverse'} ${isMe ? 'anim-msg-me' : 'anim-msg-other'} message-item`;
+      wrapper.dataset.text = (msg.text || "").toLowerCase();
+
+      const senderObj = allUsersCache[msg.senderId] || { displayName: msg.senderName || "عضو", photoURL: msg.senderAvatar };
+      const formattedBody = formatMessageContent(msg.text || "");
+
+      let attachmentsHTML = "";
+      const mediaList = msg.mediaItems || (msg.mediaUrl ? [{ url: msg.mediaUrl, type: msg.mediaType || "image" }] : []);
+      if (mediaList.length > 0) {
+        if (mediaList.length === 1 && mediaList[0].type === "sticker") {
+          attachmentsHTML = `<img src="${escapeHTML(mediaList[0].url)}" alt="Sticker" class="w-28 h-28 object-contain mt-1" />`;
+        } else {
+          const gridCols = mediaList.length > 1 ? "grid-cols-2" : "grid-cols-1";
+          attachmentsHTML = `<div class="grid ${gridCols} gap-1.5 mt-1.5">` + mediaList.map(m =>
+            m.type === "video"
+              ? `<video src="${escapeHTML(m.url)}" controls class="max-h-60 w-full rounded-xl"></video>`
+              : `<img src="${escapeHTML(m.url)}" class="max-h-60 w-full rounded-xl object-cover cursor-pointer" onclick="window.open('${escapeHTML(m.url)}','_blank')" />`
+          ).join("") + `</div>`;
+        }
+      }
+
+      const canDelete = isMe || isSuperAdmin || (activeServerData && activeServerData.ownerId === currentUser.uid);
+      const canPin = isSuperAdmin || (activeServerData && activeServerData.ownerId === currentUser.uid) || currentContext === "dms";
+      const isStickerOnly = mediaList.length === 1 && mediaList[0].type === "sticker" && !msg.text;
+
+      wrapper.innerHTML = `
+        <img onclick="openUserProfileModal('${msg.senderId}')" src="${getAvatarUrl(senderObj)}" class="w-8 h-8 rounded-full object-cover cursor-pointer shrink-0 mb-1" />
+        <div class="max-w-[76%] sm:max-w-[65%] flex flex-col ${isMe ? 'items-start' : 'items-end'}">
+          <div class="flex items-center gap-1.5 mb-0.5 px-1">
+            <span onclick="openUserProfileModal('${msg.senderId}')" class="text-[11px] font-bold text-gray-300 hover:underline cursor-pointer">${escapeHTML(senderObj.displayName)}</span>
+            ${(msg.senderEmail || "").toLowerCase() === SUPER_ADMIN_EMAIL ? `<i class="fa-solid fa-crown text-amber-400 text-[10px]" title="الإدارة العليا"></i>` : ""}
+            ${msg.isPinned ? `<i class="fa-solid fa-thumbtack text-amber-400 text-[10px]" title="رسالة مثبتة"></i>` : ""}
+            ${msg.isEdited ? `<span class="text-[9px] text-gray-400">(معدّلة)</span>` : ""}
+          </div>
+          <div class="${isStickerOnly ? 'bg-transparent p-0' : (isMe ? 'bubble-me px-3.5 py-2.5' : 'bubble-other px-3.5 py-2.5')} text-xs sm:text-sm break-words leading-relaxed relative group">
+            ${formattedBody}
+            ${attachmentsHTML}
+            <div class="mt-1 flex items-center gap-2.5 opacity-60 group-hover:opacity-100 transition text-[10px]">
+              ${isMe && msg.text ? `<button onclick='startEditMessage("${msgId}", ${JSON.stringify(msg.text)})' class="hover:text-sky-300" title="تعديل"><i class="fa-solid fa-pen"></i></button>` : ""}
+              ${canPin ? `<button onclick="togglePinMessage('${colRef.path}', '${msgId}', ${!msg.isPinned})" class="hover:text-amber-300" title="تثبيت"><i class="fa-solid fa-thumbtack"></i></button>` : ""}
+              ${canDelete ? `<button onclick="deleteSingleMessage('${colRef.path}', '${msgId}')" class="hover:text-rose-300" title="حذف"><i class="fa-solid fa-trash"></i></button>` : ""}
+              ${!isMe ? `<button onclick="reportContent('message', '${msgId}', '${escapeHTML(msg.text || 'وسائط')}')" class="hover:text-amber-300" title="إبلاغ"><i class="fa-solid fa-flag"></i></button>` : ""}
+            </div>
+          </div>
+        </div>`;
+      return wrapper;
+    }
+
+    function formatMessageContent(rawText) {
+      if (!rawText) return "";
+      let safe = escapeHTML(rawText);
+
+      // بطاقة دعوة سيرفر (#invite=SERVER_ID)
+      const inviteMatch = rawText.match(/#invite=([a-zA-Z0-9_-]+)/);
+      let inviteCardHTML = "";
+      if (inviteMatch && serversCache[inviteMatch[1]]) {
+        const srv = serversCache[inviteMatch[1]];
+        inviteCardHTML = `
+          <div class="mt-2 p-3 rounded-2xl bg-black/35 border border-white/15 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-11 h-11 rounded-xl accent-gradient flex items-center justify-center font-bold text-white overflow-hidden shrink-0">
+                ${srv.icon ? `<img src="${escapeHTML(srv.icon)}" class="w-full h-full object-cover" />` : escapeHTML(srv.name.slice(0, 2))}
+              </div>
+              <div class="truncate">
+                <div class="text-[10px] text-emerald-400 font-bold">دعوة سيرفر (${srv.type === 'private' ? 'خاص' : 'عام'})</div>
+                <div class="text-xs font-extrabold text-white truncate">${escapeHTML(srv.name)}</div>
+              </div>
+            </div>
+            <button onclick="joinServerById('${srv.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shrink-0">انضمام</button>
+          </div>`;
+      }
+
+      // الروابط باللون الأزرق القابل للنقر
+      safe = safe.replace(/(https?:\/\/[^\s<]+)/g, `<a href="$1" target="_blank" rel="noopener" class="text-blue-300 underline font-semibold hover:text-blue-200 break-all">$1</a>`);
+      // تمييز المنشن (@username)
+      safe = safe.replace(/(@[a-zA-Z0-9_.]+|@everyone)/g, `<span class="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-200 font-bold">$1</span>`);
+      return `<div>${safe}</div>${inviteCardHTML}`;
+    }
+
+    function getActiveMessagesCollection() {
+      if (currentContext === "general") return collection(db, "general_messages");
+      if (currentContext === "dms" && activeDmChatId) return collection(db, "chats", activeDmChatId, "messages");
+      if (currentContext === "server" && activeServerId && activeChannelId) {
+        return collection(db, "servers", activeServerId, "channels", activeChannelId, "messages");
+      }
+      return null;
+    }
+
+    window.sendMessage = async (e) => {
+      e.preventDefault();
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      const colRef = getActiveMessagesCollection();
+      if (!colRef) return showToast("اختر محادثة أو قناة أولاً.", "warn");
+      if (!text && pendingAttachments.length === 0) return;
+
+      // أمر الإدارة العليا /clear لمسح الشات بالكامل
+      if (text === "/clear" && isSuperAdmin) {
+        input.value = "";
+        const snap = await getDocs(colRef);
+        const batch = writeBatch(db);
+        snap.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+        return showToast("تم مسح الشات بالكامل بأمر الإدارة العليا!", "success");
+      }
+
+      // فحص AutoMod العام + AutoMod السيرفر
+      const lower = text.toLowerCase();
+      const serverWords = (currentContext === "server" && activeServerData?.badWords) ? activeServerData.badWords : [];
+      const allForbidden = [...globalBadWords, ...serverWords];
+      if (!isSuperAdmin && allForbidden.some(w => w && lower.includes(w.toLowerCase()))) {
+        return showToast("تم حجب الرسالة بواسطة نظام الحماية AutoMod لاحتوائها على كلمات ممنوعة.", "error");
+      }
+
+      try {
+        if (editingMessageId) {
+          await updateDoc(doc(colRef, editingMessageId), { text, isEdited: true });
+          cancelEditMessage();
+          input.value = "";
+          return;
+        }
+
+        await addDoc(colRef, {
+          text,
+          senderId: currentUser.uid,
+          senderName: currentUserProfile.displayName,
+          senderEmail: (currentUser.email || "").toLowerCase(),
+          mediaItems: pendingAttachments,
+          isPinned: false,
+          timestamp: Date.now(),
+          createdAt: serverTimestamp()
+        });
+
+        input.value = "";
+        clearPendingAttachments();
+        playNotificationSound();
+      } catch (err) {
+        showToast("فشل إرسال الرسالة: " + err.message, "error");
+      }
+    };
+
+    window.startEditMessage = (msgId, oldText) => {
+      editingMessageId = msgId;
+      document.getElementById("editingBanner").classList.remove("hidden");
+      const inp = document.getElementById("messageInput");
+      inp.value = oldText;
+      inp.focus();
+    };
+
+    window.cancelEditMessage = () => {
+      editingMessageId = null;
+      document.getElementById("editingBanner").classList.add("hidden");
+    };
+
+    window.togglePinMessage = async (colPath, msgId, pinState) => {
+      await updateDoc(doc(db, colPath, msgId), { isPinned: pinState });
+      showToast(pinState ? "تم تثبيت الرسالة" : "تم إلغاء التثبيت", "info");
+    };
+
+    window.openPinnedMessagesModal = () => {
+      const pinned = currentMessagesSnapshotDocs.filter(m => m.isPinned);
+      const box = document.getElementById("pinnedMessagesList");
+      box.innerHTML = pinned.length === 0 ? `<p class="text-xs text-gray-400 text-center py-6">لا توجد رسائل مثبتة في هذه المحادثة.</p>` : pinned.map(m => `
+        <div class="p-3 rounded-2xl bg-app-tertiary border border-white/10">
+          <div class="text-[11px] font-bold text-indigo-400 mb-1">${escapeHTML(m.senderName)}</div>
+          <div class="text-xs text-gray-200">${escapeHTML(m.text || "مرفق")}</div>
+        </div>`).join("");
+      openModal("pinnedMessagesModal");
+    };
+
+    window.deleteSingleMessage = async (colPath, msgId) => {
+      await deleteDoc(doc(db, colPath, msgId));
+      showToast("تم حذف الرسالة", "info");
+    };
+
+    // البحث داخل المحادثة
+    window.toggleChatSearch = (forceState) => {
+      const bar = document.getElementById("inChatSearchBar");
+      const show = typeof forceState === "boolean" ? forceState : bar.classList.contains("hidden");
+      bar.classList.toggle("hidden", !show);
+      if (show) document.getElementById("inChatSearchInput").focus();
+      else filterMessagesInChat("");
+    };
+
+    window.filterMessagesInChat = (term) => {
+      const q = term.trim().toLowerCase();
+      const items = document.querySelectorAll(".message-item");
+      let matches = 0;
+      items.forEach(el => {
+        const hit = !q || el.dataset.text.includes(q);
+        el.classList.toggle("hidden", !hit);
+        if (hit && q) matches++;
+      });
+      document.getElementById("searchMatchCount").textContent = q ? `${matches} نتيجة` : "";
+    };
+
+    // الإكمال التلقائي للمنشن (@)
+    window.handleMentionTyping = (val) => {
+      const box = document.getElementById("mentionAutocompleteBox");
+      const match = val.match(/@([a-zA-Z0-9_.]*)$/);
+      if (!match) { box.classList.add("hidden"); return; }
+      const term = match[1].toLowerCase();
+      const candidates = Object.values(allUsersCache).filter(u => (u.username || "").toLowerCase().startsWith(term)).slice(0, 6);
+      if (candidates.length === 0) { box.classList.add("hidden"); return; }
+      box.innerHTML = candidates.map(u => `
+        <button type="button" onclick="applyMention('@${u.username}')" class="w-full flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/10 text-right text-xs">
+          <img src="${getAvatarUrl(u)}" class="w-6 h-6 rounded-full" />
+          <span class="font-bold truncate">${escapeHTML(u.displayName)}</span>
+          <span class="text-gray-400 text-[10px]" dir="ltr">@${u.username}</span>
+        </button>`).join("");
+      box.classList.remove("hidden");
+    };
+
+    window.applyMention = (tag) => {
+      const inp = document.getElementById("messageInput");
+      inp.value = inp.value.replace(/@([a-zA-Z0-9_.]*)$/, tag + " ");
+      document.getElementById("mentionAutocompleteBox").classList.add("hidden");
+      inp.focus();
+    };
+
+    // رفع حتى 10 صور أو فيديو
+    window.handleMediaFilesSelect = async (e) => {
+      const files = Array.from(e.target.files).slice(0, 10);
+      if (files.length === 0) return;
+      pendingAttachments = [];
+      for (const f of files) {
+        if (f.type.startsWith("video")) {
+          const url = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+          pendingAttachments.push({ url, type: "video", name: f.name });
+        } else {
+          const cleanUrl = await sanitizeStaticImage(f);
+          pendingAttachments.push({ url: cleanUrl, type: "image", name: f.name });
+        }
+      }
+      document.getElementById("attachmentFileName").textContent = `تم تحديد ${pendingAttachments.length} ملف`;
+      document.getElementById("attachmentPreviewBar").classList.remove("hidden");
+    };
+
+    window.clearPendingAttachments = () => {
+      pendingAttachments = [];
+      document.getElementById("chatMediaInput").value = "";
+      document.getElementById("attachmentPreviewBar").classList.add("hidden");
+    };
+
+    // ================= الإيموجيات المتحركة (مشتركة بين السيرفرات والعام والخاص) والملصقات =================
+    window.toggleEmojiPicker = () => {
+      const picker = document.getElementById("emojiStickerPicker");
+      picker.classList.toggle("hidden");
+      if (!picker.classList.contains("hidden")) switchPickerTab("emojis");
+    };
+
+    window.switchPickerTab = (tab) => {
+      const grid = document.getElementById("pickerContentGrid");
+      const defaultEmojis = ["😀", "😂", "🔥", "❤️", "👍", "🎉", "😎", "🥳", "👑", "💯"];
+      if (tab === "emojis") {
+        grid.innerHTML = defaultEmojis.map(em => `<button type="button" onclick="insertEmojiText('${em}')" class="text-2xl p-1.5 hover:bg-white/10 rounded-xl">${em}</button>`).join("") +
+          customEmojis.map(ce => `<button type="button" onclick="sendCustomAsset('${escapeHTML(ce.url)}', 'image')" class="p-1 hover:bg-white/10 rounded-xl" title="${escapeHTML(ce.name)}"><img src="${escapeHTML(ce.url)}" class="w-8 h-8 object-contain mx-auto" /></button>`).join("");
+      } else {
+        const defaultStickers = window.NABD_DEFAULT_STICKERS || [
+          { name: "ترحيب", url: "https://media.giphy.com/media/hvRJCLFzcasrR4ia7z/giphy.gif" },
+          { name: "تصفيق", url: "https://media.giphy.com/media/111ebonMs90YLu/giphy.gif" },
+          { name: "ضحك", url: "https://media.giphy.com/media/ZqlvCTNHpqrio/giphy.gif" }
+        ];
+        const allStickers = [...defaultStickers, ...customStickers];
+        grid.innerHTML = allStickers.map(st => `<button type="button" onclick="sendCustomAsset('${escapeHTML(st.url)}', 'sticker')" class="p-1 hover:bg-white/10 rounded-xl"><img src="${escapeHTML(st.url)}" class="w-14 h-14 object-contain mx-auto" /></button>`).join("");
+      }
+    };
+
+    window.insertEmojiText = (em) => {
+      const inp = document.getElementById("messageInput");
+      inp.value += em;
+      inp.focus();
+    };
+
+    window.sendCustomAsset = async (url, type) => {
+      const colRef = getActiveMessagesCollection();
+      if (!colRef) return;
+      await addDoc(colRef, {
+        text: "",
+        senderId: currentUser.uid,
+        senderName: currentUserProfile.displayName,
+        senderEmail: (currentUser.email || "").toLowerCase(),
+        mediaItems: [{ url, type }],
+        timestamp: Date.now(),
+        createdAt: serverTimestamp()
+      });
+      document.getElementById("emojiStickerPicker").classList.add("hidden");
+    };
+
+    window.saveCustomEmojiOrSticker = async (e) => {
+      e.preventDefault();
+      const type = document.getElementById("assetTypeSelect").value;
+      const name = document.getElementById("assetNameInput").value.trim();
+      let url = document.getElementById("assetUrlInput").value.trim();
+      const file = document.getElementById("assetFileInput").files[0];
+
+      if (file) url = await sanitizeStaticImage(file);
+      if (!url) return showToast("أدخل رابطاً أو اختر صورة متحركة!", "warn");
+
+      await addDoc(collection(db, "custom_assets"), {
+        numericId: generateNumericId(),
+        type,
+        name,
+        url,
+        createdBy: currentUser.uid
+      });
+      closeModal("addCustomAssetModal");
+      showToast("تم الحفظ بنجاح ويمكن استعماله في السيرفرات والعام والخاص!", "success");
+    };
+
+    // ================= بطاقة العضو، حفظ الصورة والبنر، والستوري المجمّع =================
+    let viewedProfileUser = null;
+
+    window.openUserProfileModal = async (uid) => {
+      const snap = await getDoc(doc(db, "users", uid));
+      if (!snap.exists()) return;
+      const u = snap.data();
+      viewedProfileUser = u;
+
+      document.getElementById("profDisplayName").textContent = u.displayName;
+      document.getElementById("profUsername").textContent = "@" + u.username;
+      document.getElementById("profNumericId").textContent = "ID: " + (u.numericId || uid.slice(0, 8));
+      document.getElementById("profAboutText").textContent = u.about || "لا توجد نبذة تعريفية بعد.";
+      document.getElementById("profAvatarImg").src = getAvatarUrl(u);
+
+      const bannerImg = document.getElementById("profBannerImg");
+      const dlBanner = document.getElementById("btnDownloadBanner");
+      if (u.bannerURL) {
+        bannerImg.src = u.bannerURL;
+        bannerImg.classList.remove("hidden");
+        dlBanner.classList.remove("hidden");
+      } else {
+        bannerImg.classList.add("hidden");
+        dlBanner.classList.add("hidden");
+      }
+
+      const hasStories = (groupedStoriesMap[uid] && groupedStoriesMap[uid].length > 0);
+      document.getElementById("btnViewUserStories").classList.toggle("hidden", !hasStories);
+
+      const actions = document.getElementById("profActionButtons");
+      if (uid === currentUser.uid) {
+        actions.innerHTML = `<button onclick="closeModal('userProfileModal'); openSettingsModal('account')" class="col-span-2 py-2.5 rounded-xl accent-gradient text-xs font-bold text-white">تعديل ملفي الشخصي</button>`;
+      } else {
+        const isFriend = (currentUserProfile.friends || []).includes(uid);
+        const isBlocked = (currentUserProfile.blockedUsers || []).includes(uid);
+        actions.innerHTML = `
+          <button onclick="closeModal('userProfileModal'); selectContext('dms'); openDirectChat('${uid}')" class="py-2.5 rounded-xl accent-gradient text-xs font-bold text-white"><i class="fa-solid fa-comment ml-1"></i> مراسلة</button>
+          ${isFriend
+            ? `<button class="py-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 text-xs font-bold"><i class="fa-solid fa-check ml-1"></i> صديق</button>`
+            : `<button onclick="sendFriendRequestToUid('${uid}')" class="py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-bold"><i class="fa-solid fa-user-plus ml-1"></i> إضافة صديق</button>`}
+          <button onclick="toggleBlockUser('${uid}')" class="col-span-2 py-2 rounded-xl bg-white/5 hover:bg-rose-500/20 text-rose-400 text-xs font-bold">${isBlocked ? 'إلغاء الحظر' : 'حظر المستخدم (Block)'}</button>
+          ${isSuperAdmin ? `<button onclick="adminBanUser('${uid}', ${!u.isBanned})" class="col-span-2 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold">${u.isBanned ? 'رفع الحظر العام' : 'حظر الحساب من المنصة (Admin)'}</button>` : ""}`;
+      }
+      openModal("userProfileModal");
+    };
+
+    window.downloadProfileMedia = (kind) => {
+      if (!viewedProfileUser) return;
+      const url = kind === "banner" ? viewedProfileUser.bannerURL : getAvatarUrl(viewedProfileUser);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${viewedProfileUser.username}_${kind}.png`;
+      a.click();
+    };
+
+    window.adminBanUser = async (uid, banState) => {
+      if (!isSuperAdmin) return;
+      await updateDoc(doc(db, "users", uid), { isBanned: banState });
+      showToast(banState ? "تم حظر المستخدم من المنصة" : "تم رفع الحظر", "warn");
+      closeModal("userProfileModal");
+    };
+
+    // ================= الستوري المجمّع (أيقونة واحدة لكل صاحب حساب) =================
+    function listenToStories() {
+      if (unsubStories) unsubStories();
+      unsubStories = onSnapshot(collection(db, "stories"), (snap) => {
+        const now = Date.now();
+        groupedStoriesMap = {};
+        const myFriends = currentUserProfile?.friends || [];
+
+        snap.forEach(d => {
+          const st = { id: d.id, ...d.data() };
+          if (st.expiresAt && st.expiresAt < now) return;
+          const canSee = st.uid === currentUser.uid || st.visibility === "public" || myFriends.includes(st.uid) || isSuperAdmin;
+          if (!canSee) return;
+
+          if (!groupedStoriesMap[st.uid]) groupedStoriesMap[st.uid] = [];
+          groupedStoriesMap[st.uid].push(st);
+        });
+
+        renderGroupedStoriesStrip();
+      });
+    }
+
+    function renderGroupedStoriesStrip() {
+      const list = document.getElementById("groupedStoriesList");
+      const userIds = Object.keys(groupedStoriesMap);
+      list.innerHTML = userIds.map(uid => {
+        const userStories = groupedStoriesMap[uid];
+        const author = allUsersCache[uid] || { displayName: userStories[0].authorName || "عضو" };
+        return `
+          <button onclick="openUserStories('${uid}')" class="flex flex-col items-center gap-1 shrink-0">
+            <div class="story-ring relative">
+              <img src="${getAvatarUrl(author)}" class="w-11 h-11 rounded-full object-cover border-2 border-[#1e1f22]" />
+              ${userStories.length > 1 ? `<span class="absolute -bottom-1 -left-1 px-1.5 rounded-full bg-indigo-600 text-[9px] font-bold text-white">${userStories.length}</span>` : ""}
+            </div>
+            <span class="text-[11px] text-gray-200 max-w-[64px] truncate">${escapeHTML(author.displayName)}</span>
+          </button>`;
+      }).join("");
+    }
+
+    window.openUserStories = (uid) => {
+      activeStoryUserQueue = groupedStoriesMap[uid] || [];
+      if (activeStoryUserQueue.length === 0) return;
+      activeStoryIndex = 0;
+      renderCurrentStorySlide();
+      openModal("storyViewerModal");
+    };
+
+    window.openUserStoriesFromProfile = () => {
+      if (!viewedProfileUser) return;
+      closeModal("userProfileModal");
+      openUserStories(viewedProfileUser.uid);
+    };
+
+    async function renderCurrentStorySlide() {
+      const st = activeStoryUserQueue[activeStoryIndex];
+      if (!st) return closeModal("storyViewerModal");
+
+      // تسجيل المشاهدة
+      if (st.uid !== currentUser.uid && !(st.views || []).includes(currentUser.uid)) {
+        await updateDoc(doc(db, "stories", st.id), { views: arrayUnion(currentUser.uid) }).catch(() => {});
+      }
+
+      const author = allUsersCache[st.uid] || { displayName: st.authorName || "عضو" };
+      document.getElementById("storyAuthorName").textContent = author.displayName;
+      document.getElementById("storyAuthorAvatar").src = getAvatarUrl(author);
+      document.getElementById("storyVisibilityBadge").textContent = st.visibility === "public" ? "🌐 ستوري عام" : "👥 للأصدقاء";
+      document.getElementById("storyViewsCount").innerHTML = `<i class="fa-solid fa-eye ml-1"></i> ${(st.views || []).length}`;
+      document.getElementById("btnDeleteStory").classList.toggle("hidden", !(st.uid === currentUser.uid || isSuperAdmin));
+
+      document.getElementById("storyProgressBars").innerHTML = activeStoryUserQueue.map((_, idx) => `
+        <div class="flex-1 h-1 rounded-full bg-white/25 overflow-hidden">
+          <div class="h-full bg-white transition-all ${idx <= activeStoryIndex ? 'w-full' : 'w-0'}"></div>
+        </div>`).join("");
+
+      const stage = document.getElementById("storyMediaContainer");
+      if (st.mediaUrl) {
+        stage.innerHTML = st.mediaType === "video"
+          ? `<video src="${escapeHTML(st.mediaUrl)}" autoplay playsinline class="max-h-full max-w-full rounded-2xl"></video>`
+          : `<img src="${escapeHTML(st.mediaUrl)}" class="max-h-full max-w-full rounded-2xl object-contain" />`;
+      } else {
+        stage.innerHTML = `<div class="p-6 rounded-3xl accent-gradient text-white font-extrabold text-lg leading-relaxed">${escapeHTML(st.text)}</div>`;
+      }
+
+      const comments = st.comments || [];
+      document.getElementById("storyCommentsBox").innerHTML = comments.map(c => `<div><strong class="text-indigo-300">${escapeHTML(c.name)}:</strong> ${escapeHTML(c.text)}</div>`).join("");
+    }
+
+    window.sendStoryReply = async () => {
+      const st = activeStoryUserQueue[activeStoryIndex];
+      const inp = document.getElementById("storyReplyInput");
+      const text = inp.value.trim();
+      if (!st || !text) return;
+      const commentObj = { uid: currentUser.uid, name: currentUserProfile.displayName, text };
+      await updateDoc(doc(db, "stories", st.id), { comments: arrayUnion(commentObj) });
+      st.comments = [...(st.comments || []), commentObj];
+      inp.value = "";
+      renderCurrentStorySlide();
+    };
+
+    window.showStoryViewersList = () => {
+      const st = activeStoryUserQueue[activeStoryIndex];
+      if (!st || st.uid !== currentUser.uid) return;
+      const names = (st.views || []).map(v => allUsersCache[v]?.displayName || "عضو").join("، ");
+      showToast(names ? `المشاهدون: ${names}` : "لا توجد مشاهدات بعد.", "info");
+    };
+
+    window.nextStorySlide = () => {
+      if (activeStoryIndex < activeStoryUserQueue.length - 1) {
+        activeStoryIndex++;
+        renderCurrentStorySlide();
+      } else {
+        closeModal("storyViewerModal");
+      }
+    };
+
+    window.prevStorySlide = () => {
+      if (activeStoryIndex > 0) {
+        activeStoryIndex--;
+        renderCurrentStorySlide();
+      }
+    };
+
+    window.publishStory = async (e) => {
+      e.preventDefault();
+      const text = document.getElementById("storyTextContent").value.trim();
+      const visibility = document.getElementById("storyVisibility").value;
+      const file = document.getElementById("storyMediaFile").files[0];
+
+      let mediaUrl = "", mediaType = "";
+      if (file) {
+        mediaType = file.type.startsWith("video") ? "video" : "image";
+        mediaUrl = mediaType === "video"
+          ? await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(file); })
+          : await sanitizeStaticImage(file);
+      }
+      if (!text && !mediaUrl) return showToast("أضف نصاً أو صورة للستوري", "warn");
+
+      await addDoc(collection(db, "stories"), {
+        uid: currentUser.uid,
+        authorName: currentUserProfile.displayName,
+        text,
+        mediaUrl,
+        mediaType,
+        visibility,
+        views: [],
+        comments: [],
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+        timestamp: Date.now()
+      });
+      closeModal("createStoryModal");
+      showToast("تم نشر الستوري!", "success");
+    };
+
+    window.deleteCurrentStory = async () => {
+      const st = activeStoryUserQueue[activeStoryIndex];
+      if (!st) return;
+      await deleteDoc(doc(db, "stories", st.id));
+      closeModal("storyViewerModal");
+      showToast("تم حذف الستوري", "info");
+    };
+
+    // ================= الشورت التفاعلي مع التقليب والحذف والإبلاغ =================
+    window.openShortsViewer = async () => {
+      if (!activeServerId) return;
+      const snap = await getDocs(collection(db, "servers", activeServerId, "shorts"));
+      serverShortsList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      currentShortIndex = 0;
+      renderShortSlide();
+      openModal("shortsViewerModal");
+    };
+
+    function renderShortSlide() {
+      const stage = document.getElementById("shortStage");
+      const delBtn = document.getElementById("btnDeleteCurrentShort");
+      if (serverShortsList.length === 0) {
+        stage.innerHTML = `<p class="text-xs text-gray-400">لا توجد مقاطع شورت في هذا السيرفر بعد.</p>`;
+        delBtn.classList.add("hidden");
+        return;
+      }
+      const item = serverShortsList[currentShortIndex];
+      document.getElementById("shortAuthorLabel").textContent = item.authorName || "عضو";
+      document.getElementById("shortCaptionLabel").textContent = item.caption || "";
+
+      const canDelete = isSuperAdmin || (activeServerData?.ownerId === currentUser.uid) || (item.uid === currentUser.uid);
+      delBtn.classList.toggle("hidden", !canDelete);
+
+      stage.innerHTML = item.mediaType === "video"
+        ? `<video src="${escapeHTML(item.mediaUrl)}" autoplay loop controls class="max-h-full max-w-full"></video>`
+        : `<img src="${escapeHTML(item.mediaUrl)}" class="max-h-full max-w-full object-contain" />`;
+    }
+
+    window.nextShort = () => {
+      if (serverShortsList.length === 0) return;
+      currentShortIndex = (currentShortIndex + 1) % serverShortsList.length;
+      renderShortSlide();
+    };
+
+    window.prevShort = () => {
+      if (serverShortsList.length === 0) return;
+      currentShortIndex = (currentShortIndex - 1 + serverShortsList.length) % serverShortsList.length;
+      renderShortSlide();
+    };
+
+    window.publishServerShort = async (e) => {
+      e.preventDefault();
+      if (!activeServerId) return;
+      const caption = document.getElementById("shortCaptionInput").value.trim();
+      const file = document.getElementById("shortVideoFile").files[0];
+      if (!file) return;
+
+      const mediaType = file.type.startsWith("video") ? "video" : "image";
+      const mediaUrl = mediaType === "video"
+        ? await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(file); })
+        : await sanitizeStaticImage(file);
+
+      await addDoc(collection(db, "servers", activeServerId, "shorts"), {
+        uid: currentUser.uid,
+        authorName: currentUserProfile.displayName,
+        caption,
+        mediaUrl,
+        mediaType,
+        timestamp: Date.now()
+      });
+      closeModal("uploadShortModal");
+      showToast("تم نشر الشورت!", "success");
+      openShortsViewer();
+    };
+
+    window.deleteCurrentShort = async () => {
+      const item = serverShortsList[currentShortIndex];
+      if (!item || !activeServerId) return;
+      await deleteDoc(doc(db, "servers", activeServerId, "shorts", item.id));
+      showToast("تم حذف الشورت", "info");
+      openShortsViewer();
+    };
+
+    // ================= نظام البلاغات والمراجعة الذكية AI =================
+    window.reportContent = async (type, targetId, snippet) => {
+      const nsfwKeywords = ["porn", "xxx", "nude", "nsfw", "إباحي", "سكس", "عري"];
+      const aiFlagged = nsfwKeywords.some(k => (snippet || "").toLowerCase().includes(k));
+
+      await addDoc(collection(db, "reports"), {
+        type,
+        targetId,
+        snippet: (snippet || "").slice(0, 120),
+        reportedBy: currentUser.uid,
+        aiVerdict: aiFlagged ? "رصد الذكاء الاصطناعي محتوى مخالفاً وتم حجبه" : "بانتظار المراجعة البشرية من الإدارة",
+        status: aiFlagged ? "auto_removed" : "pending",
+        timestamp: Date.now()
+      });
+
+      showToast(aiFlagged ? "تم رصد مخالفة صريحة وحجبها آلياً." : "تم إرسال البلاغ للإدارة العليا للمراجعة.", "info");
+    };
+
+    window.reportCurrentStory = () => {
+      const st = activeStoryUserQueue[activeStoryIndex];
+      if (st) reportContent("story", st.id, st.text || "ستوري وسائط");
+    };
+
+    window.reportCurrentShort = () => {
+      const item = serverShortsList[currentShortIndex];
+      if (item) reportContent("short", item.id, item.caption || "شورت سيرفر");
+    };
+
+    window.openAdminReportsModal = () => {
+      if (!isSuperAdmin) return;
+      openModal("adminReportsModal");
+    };
+
+    function renderAdminReports(reports) {
+      const box = document.getElementById("adminReportsList");
+      if (!box) return;
+      box.innerHTML = reports.length === 0 ? `<p class="text-xs text-gray-400 text-center py-6">لا توجد بلاغات حالياً.</p>` : reports.map(r => `
+        <div class="p-3 rounded-2xl bg-app-tertiary border border-white/10 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-rose-400">[${escapeHTML(r.type)}] — ${escapeHTML(r.aiVerdict)}</div>
+            <div class="text-xs text-gray-300 truncate mt-1">${escapeHTML(r.snippet)}</div>
+          </div>
+          <button onclick="resolveAdminReport('${r.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold shrink-0">تمت المراجعة</button>
+        </div>`).join("");
+    }
+
+    window.resolveAdminReport = async (repId) => {
+      await deleteDoc(doc(db, "reports", repId));
+      showToast("تمت معالجة البلاغ وإغلاقه.", "success");
+    };
+
+    // ================= WebRTC: القنوات الصوتية والمكالمات المباشرة (مع كتم المايك وديفين) =================
+    window.joinVoiceRoom = async (serverId, channelId, channelName) => {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        activeCallDocId = `voice_${serverId}_${channelId}`;
+
+        document.getElementById("voiceStatusBar").classList.remove("hidden");
+        document.getElementById("voiceChannelLabel").textContent = channelName;
+        document.getElementById("activeCallGrid").classList.remove("hidden");
+        document.getElementById("activeCallTitle").textContent = `روم صوتي: ${channelName}`;
+
+        await setDoc(doc(db, "calls", activeCallDocId), { active: true, timestamp: Date.now() }, { merge: true });
+        await setDoc(doc(db, "calls", activeCallDocId, "participants", currentUser.uid), {
+          uid: currentUser.uid,
+          displayName: currentUserProfile.displayName,
+          avatar: getAvatarUrl(currentUserProfile),
+          muted: isMicMuted,
+          deafened: isDeafened,
+          joinedAt: Date.now()
+        });
+
+        onSnapshot(collection(db, "calls", activeCallDocId, "participants"), (snap) => {
+          const grid = document.getElementById("callParticipantsContainer");
+          grid.innerHTML = snap.docs.map(d => {
+            const p = d.data();
+            return `
+              <div class="p-3 rounded-2xl bg-app-secondary border ${p.muted ? 'border-rose-500/30' : 'border-emerald-500/40'} flex flex-col items-center text-center">
+                <img src="${p.avatar || getAvatarUrl({})}" class="w-12 h-12 rounded-full object-cover mb-2 ${!p.muted ? 'anim-speaking' : ''}" />
+                <div class="text-xs font-bold truncate w-full">${escapeHTML(p.displayName)}</div>
+                <div class="flex gap-1.5 mt-1 text-[10px]">
+                  ${p.muted ? `<span class="text-rose-400"><i class="fa-solid fa-microphone-slash"></i></span>` : `<span class="text-emerald-400"><i class="fa-solid fa-microphone"></i></span>`}
+                  ${p.deafened ? `<span class="text-amber-400"><i class="fa-solid fa-volume-xmark"></i></span>` : ""}
+                </div>
+              </div>`;
+          }).join("");
+        });
+
+        showToast(`اتصلت بالروم الصوتي: ${channelName}`, "success");
+      } catch (err) {
+        showToast("يرجى السماح بالوصول إلى الميكروفون للدخول للروم الصوتي.", "error");
+      }
+    };
+
+    window.startDirectCall = async (isVideo) => {
+      if (!activeDmPeerData) return;
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: isVideo });
+        const callRef = await addDoc(collection(db, "calls"), {
+          callerId: currentUser.uid,
+          callerName: currentUserProfile.displayName,
+          callerAvatar: getAvatarUrl(currentUserProfile),
+          calleeId: activeDmPeerData.uid,
+          isVideo,
+          status: "ringing",
+          timestamp: Date.now()
+        });
+        activeCallDocId = callRef.id;
+        document.getElementById("voiceStatusBar").classList.remove("hidden");
+        document.getElementById("voiceChannelLabel").textContent = `مكالمة مع ${activeDmPeerData.displayName}`;
+        document.getElementById("activeCallGrid").classList.remove("hidden");
+        document.getElementById("callParticipantsContainer").innerHTML = `
+          <div class="col-span-full flex flex-col items-center py-4">
+            <video id="localVideoPreview" autoplay muted playsinline class="w-48 h-36 rounded-2xl bg-black object-cover mb-2 ${isVideo ? '' : 'hidden'}"></video>
+            <p class="text-xs text-emerald-400 font-bold">جاري الاتصال بـ ${escapeHTML(activeDmPeerData.displayName)}...</p>
+          </div>`;
+        if (isVideo) document.getElementById("localVideoPreview").srcObject = localStream;
+      } catch (err) {
+        showToast("تعذر الوصول للمايك/الكاميرا: " + err.message, "error");
+      }
+    };
+
+    window.acceptIncomingCall = async () => {
+      if (!incomingCallData) return;
+      document.getElementById("incomingCallModal").classList.add("hidden");
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: incomingCallData.isVideo });
+      activeCallDocId = incomingCallData.id;
+      await updateDoc(doc(db, "calls", activeCallDocId), { status: "connected" });
+      document.getElementById("voiceStatusBar").classList.remove("hidden");
+      document.getElementById("activeCallGrid").classList.remove("hidden");
+      showToast("تم الاتصال بنجاح!", "success");
+    };
+
+    window.rejectIncomingCall = async () => {
+      if (!incomingCallData) return;
+      await updateDoc(doc(db, "calls", incomingCallData.id), { status: "rejected" });
+      document.getElementById("incomingCallModal").classList.add("hidden");
+    };
+
+    window.toggleMuteMic = async () => {
+      isMicMuted = !isMicMuted;
+      if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = !isMicMuted);
+      const btn = document.getElementById("btnToggleMic");
+      btn.innerHTML = isMicMuted ? `<i class="fa-solid fa-microphone-slash text-rose-400"></i> <span>مكتوم</span>` : `<i class="fa-solid fa-microphone"></i> <span>كتم المايك</span>`;
+      if (activeCallDocId && activeCallDocId.startsWith("voice_")) {
+        await updateDoc(doc(db, "calls", activeCallDocId, "participants", currentUser.uid), { muted: isMicMuted });
+      }
+    };
+
+    window.toggleDeafen = async () => {
+      isDeafened = !isDeafened;
+      const btn = document.getElementById("btnToggleDeafen");
+      btn.innerHTML = isDeafened ? `<i class="fa-solid fa-volume-xmark text-amber-400"></i> <span>ديفين مفعل</span>` : `<i class="fa-solid fa-headphones"></i> <span>ديفين</span>`;
+      if (activeCallDocId && activeCallDocId.startsWith("voice_")) {
+        await updateDoc(doc(db, "calls", activeCallDocId, "participants", currentUser.uid), { deafened: isDeafened });
+      }
+    };
+
+    window.leaveVoiceOrCall = async () => {
+      if (localStream) {
+        localStream.getTracks().forEach(t => t.stop());
+        localStream = null;
+      }
+      if (activeCallDocId) {
+        if (activeCallDocId.startsWith("voice_")) {
+          await deleteDoc(doc(db, "calls", activeCallDocId, "participants", currentUser.uid)).catch(() => {});
+        } else {
+          await updateDoc(doc(db, "calls", activeCallDocId), { status: "ended" }).catch(() => {});
+        }
+        activeCallDocId = null;
+      }
+      document.getElementById("voiceStatusBar").classList.add("hidden");
+      document.getElementById("activeCallGrid").classList.add("hidden");
+      showToast("تم قطع الاتصال.", "info");
+    };
+
+    // ================= الإعدادات الشاملة (Account, Theme, Font, Layout, AutoMod, Block List, Delete Account) =================
+    window.openSettingsModal = (tab = "account") => {
+      openModal("settingsModal");
+      switchSettingsTab(tab);
+    };
+
+    window.switchSettingsTab = (tab) => {
+      document.querySelectorAll(".settings-tab-btn").forEach(btn => {
+        btn.className = "settings-tab-btn px-3 py-2.5 rounded-xl text-xs font-bold text-right flex items-center gap-2 text-gray-300 hover:bg-white/5 shrink-0";
+      });
+      const activeBtn = document.getElementById(`stab-${tab}`);
+      if (activeBtn) activeBtn.className = "settings-tab-btn px-3 py-2.5 rounded-xl text-xs font-bold text-right flex items-center gap-2 accent-gradient text-white shrink-0";
+
+      const body = document.getElementById("settingsSectionBody");
+      const title = document.getElementById("settingsSectionTitle");
+
+      if (tab === "account") {
+        title.textContent = "Account — معلومات الحساب والأمان";
+        const blockedList = currentUserProfile.blockedUsers || [];
+        body.innerHTML = `
+          <div class="space-y-4">
+            <div class="p-3 rounded-2xl bg-app-tertiary border border-white/5 flex items-center justify-between text-xs">
+              <span>معرّف حسابك (Numeric ID): <strong class="font-mono text-indigo-400">${currentUserProfile.numericId || ""}</strong></span>
+              <span class="px-2 py-0.5 rounded-full ${currentUser.emailVerified ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-300'}">${currentUser.emailVerified ? 'بريد موثق' : 'غير موثق'}</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">الاسم الظاهر</label>
+                <input type="text" id="setDisplayName" value="${escapeHTML(currentUserProfile.displayName)}" class="w-full px-3.5 py-2.5 rounded-xl bg-app-tertiary border border-white/10 text-xs" />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">البريد الإلكتروني</label>
+                <input type="text" disabled value="${escapeHTML(currentUser.email)}" class="w-full px-3.5 py-2.5 rounded-xl bg-app-tertiary/50 border border-white/5 text-xs text-gray-400" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">نبذة عني (About)</label>
+              <textarea id="setAbout" rows="2" class="w-full px-3.5 py-2 rounded-xl bg-app-tertiary border border-white/10 text-xs">${escapeHTML(currentUserProfile.about || "")}</textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">تغيير الصورة الشخصية</label>
+                <input type="file" id="setAvatarFile" accept="image/*" class="w-full text-xs text-gray-300" />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">تغيير البنر (Banner)</label>
+                <input type="file" id="setBannerFile" accept="image/*" class="w-full text-xs text-gray-300" />
+              </div>
+            </div>
+
+            <label class="flex items-center justify-between p-3 rounded-2xl bg-app-tertiary border border-white/10 cursor-pointer">
+              <div>
+                <div class="text-xs font-bold">حساب خاص (Private Account)</div>
+                <div class="text-[11px] text-gray-400">منع غير الأصدقاء من مراسلتك مباشرة حتى تقبل طلب الصداقة</div>
+              </div>
+              <input type="checkbox" id="setIsPrivate" ${currentUserProfile.isPrivate ? "checked" : ""} class="w-4 h-4 accent-indigo-500" />
+            </label>
+
+            <div class="flex flex-wrap gap-2">
+              <button onclick="saveAccountSettings()" class="px-5 py-2.5 rounded-xl accent-gradient text-xs font-bold text-white shadow-md">حفظ التعديلات</button>
+              ${!currentUser.emailVerified ? `<button onclick="sendVerifyEmailAction()" class="px-4 py-2.5 rounded-xl bg-white/10 text-xs font-bold">إرسال رابط توثيق البريد</button>` : ""}
+              <button onclick="generate2FASecret()" class="px-4 py-2.5 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-bold"><i class="fa-solid fa-key ml-1"></i> إعداد 2FA (Authy)</button>
+            </div>
+
+            <!-- قائمة المحظورين -->
+            <div class="pt-3 border-t border-white/10">
+              <div class="text-xs font-bold text-gray-300 mb-2">قائمة المحظورين (${blockedList.length})</div>
+              <div class="space-y-1.5">
+                ${blockedList.length === 0 ? `<p class="text-[11px] text-gray-500">لا يوجد مستخدمون محظورون.</p>` : blockedList.map(bUid => {
+                  const bu = allUsersCache[bUid] || { displayName: "مستخدم محظور", username: "blocked" };
+                  return `<div class="p-2 rounded-xl bg-app-tertiary flex items-center justify-between text-xs">
+                    <span>${escapeHTML(bu.displayName)} (@${escapeHTML(bu.username)})</span>
+                    <button onclick="toggleBlockUser('${bUid}'); switchSettingsTab('account')" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px]">إلغاء الحظر</button>
+                  </div>`;
+                }).join("")}
+              </div>
+            </div>
+
+            <!-- حذف الحساب نهائياً -->
+            <div class="pt-3 border-t border-rose-500/20">
+              <div class="text-xs font-bold text-rose-400 mb-2">منطقة الخطر — حذف الحساب نهائياً</div>
+              <div class="flex gap-2">
+                <input type="password" id="deleteAccountPassInput" placeholder="أدخل كلمة المرور لتأكيد حذف حسابك نهائياً..." class="flex-1 px-3 py-2 rounded-xl bg-app-tertiary border border-rose-500/30 text-xs" />
+                <button onclick="permanentlyDeleteMyAccount()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold">حذف الحساب</button>
+              </div>
+            </div>
+          </div>`;
+      } else if (tab === "theme") {
+        title.textContent = "الثيم والألوان — دمج لونين أو خلفية مصورة";
+        const c1 = localStorage.getItem("nabd_accent1") || "#5865f2";
+        const c2 = localStorage.getItem("nabd_accent2") || "#7983f5";
+        body.innerHTML = `
+          <div class="space-y-4">
+            <div class="p-4 rounded-2xl bg-app-tertiary border border-white/10 space-y-3">
+              <div class="text-xs font-bold">اختيار لونين ومزجهما لصنع ثيم خاص</div>
+              <div class="flex items-center gap-4">
+                <div>
+                  <label class="block text-[11px] text-gray-400 mb-1">اللون الأول</label>
+                  <input type="color" id="themeColor1" value="${c1}" class="w-16 h-10 rounded-lg cursor-pointer bg-transparent" />
+                </div>
+                <div>
+                  <label class="block text-[11px] text-gray-400 mb-1">اللون الثاني</label>
+                  <input type="color" id="themeColor2" value="${c2}" class="w-16 h-10 rounded-lg cursor-pointer bg-transparent" />
+                </div>
+                <button onclick="applyCustomDualTheme()" class="mt-4 px-4 py-2 rounded-xl accent-gradient text-xs font-bold text-white">مزج وتطبيق</button>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-app-tertiary border border-white/10 space-y-3">
+              <div class="text-xs font-bold">ثيم الصور (تعيين صورة كخلفية للمنصة)</div>
+              <input type="url" id="themeWallpaperUrl" placeholder="ضع رابط صورة عالية الجودة..." class="w-full px-3.5 py-2.5 rounded-xl bg-app-secondary border border-white/10 text-xs" />
+              <div class="flex gap-2">
+                <button onclick="applyWallpaperTheme()" class="px-4 py-2 rounded-xl accent-gradient text-xs font-bold text-white">تطبيق الصورة</button>
+                <button onclick="resetThemeDefaults()" class="px-4 py-2 rounded-xl bg-white/10 text-xs font-bold">استعادة الافتراضي</button>
+              </div>
+            </div>
+          </div>`;
+      } else if (tab === "font") {
+        title.textContent = "خط الموقع — تغيير الخط محلياً من جهازك";
+        const fonts = [
+          { name: "Cairo (الخط الافتراضي)", val: "'Cairo', sans-serif" },
+          { name: "Tajawal (خط تجوال)", val: "'Tajawal', sans-serif" },
+          { name: "IBM Plex Sans Arabic", val: "'IBM Plex Sans Arabic', sans-serif" },
+          { name: "Readex Pro", val: "'Readex Pro', sans-serif" },
+          { name: "Changa (تشانجا)", val: "'Changa', sans-serif" },
+          { name: "Amiri (أميري كلاسيكي)", val: "'Amiri', serif" }
+        ];
+        body.innerHTML = `<div class="space-y-2">
+          ${fonts.map(f => `
+            <button onclick="setLocalFont('${f.val}')" style="font-family:${f.val}" class="w-full p-3.5 rounded-2xl bg-app-tertiary hover:bg-white/10 border border-white/10 text-right flex items-center justify-between">
+              <span class="text-sm font-bold">${f.name}</span>
+              <span class="text-xs text-indigo-400">معاينة الخط</span>
+            </button>`).join("")}
+        </div>`;
+      } else if (tab === "layout") {
+        title.textContent = "إعدادات الشكل — طريقة التصفح";
+        const currentLayout = localStorage.getItem("nabd_layout") || "classic";
+        body.innerHTML = `
+          <div class="space-y-3">
+            <button onclick="setAppLayout('classic')" class="w-full p-4 rounded-2xl bg-app-tertiary border ${currentLayout === 'classic' ? 'border-indigo-500' : 'border-white/10'} text-right">
+              <div class="text-sm font-extrabold">الوضع الأصلي (مفعل افتراضياً)</div>
+              <p class="text-xs text-gray-400 mt-1">يحافظ على شكل المنصة الأصلي مع شريط السيرفرات الجانبي والقنوات.</p>
+            </button>
+            <button onclick="setAppLayout('modern')" class="w-full p-4 rounded-2xl bg-app-tertiary border ${currentLayout === 'modern' ? 'border-indigo-500' : 'border-white/10'} text-right">
+              <div class="text-sm font-extrabold">الوضع المبسط (شريط سفلي سريع)</div>
+              <p class="text-xs text-gray-400 mt-1">يضع أزرار (الشات العام، الأصدقاء، المحادثات، البحث عن سيرفرات) في الأسفل لسهولة التصفح.</p>
+            </button>
+          </div>`;
+      } else if (tab === "automod" && isSuperAdmin) {
+        title.textContent = "AutoMod الشات العام (الإدارة العليا فقط)";
+        body.innerHTML = `
+          <div class="space-y-3">
+            <p class="text-xs text-gray-400">أضف الكلمات الخادشة ليتم منع إرسالها في الشات العام تلقائياً:</p>
+            <div class="flex gap-2">
+              <input type="text" id="newBadWordInput" placeholder="اكتب كلمة ممنوعة..." class="flex-1 px-3.5 py-2 rounded-xl bg-app-tertiary border border-white/10 text-xs" />
+              <button onclick="addGlobalBadWord()" class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold">إضافة</button>
+            </div>
+            <div class="flex flex-wrap gap-2 pt-2">
+              ${globalBadWords.map(w => `<span class="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs flex items-center gap-2">${escapeHTML(w)} <button onclick="removeGlobalBadWord('${escapeHTML(w)}')">&times;</button></span>`).join("")}
+            </div>
+          </div>`;
+      }
+    };
+
+    window.saveAccountSettings = async () => {
+      const displayName = document.getElementById("setDisplayName").value.trim();
+      const about = document.getElementById("setAbout").value.trim();
+      const isPrivate = document.getElementById("setIsPrivate").checked;
+      const updates = { displayName, about, isPrivate };
+
+      const avFile = document.getElementById("setAvatarFile").files[0];
+      if (avFile) updates.photoURL = await sanitizeStaticImage(avFile);
+
+      const bnFile = document.getElementById("setBannerFile").files[0];
+      if (bnFile) updates.bannerURL = await sanitizeStaticImage(bnFile);
+
+      await updateDoc(doc(db, "users", currentUser.uid), updates);
+      showToast("تم حفظ إعدادات الحساب بنجاح!", "success");
+    };
+
+    window.sendVerifyEmailAction = async () => {
+      try {
+        await sendEmailVerification(currentUser);
+        showToast("تم إرسال رسالة التوثيق لبريدك الإلكتروني!", "success");
+      } catch (err) {
+        showToast("تعذر الإرسال: " + err.message, "error");
+      }
+    };
+
+    window.generate2FASecret = async () => {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+      let secret = "";
+      for (let i = 0; i < 16; i++) secret += chars[Math.floor(Math.random() * chars.length)];
+      await updateDoc(doc(db, "users", currentUser.uid), { twoFactorSecret: secret });
+      showToast(`مفتاح Authy الخاص بك: ${secret} (تم حفظه لحسابك)`, "success");
+    };
+
+    window.permanentlyDeleteMyAccount = async () => {
+      const pass = document.getElementById("deleteAccountPassInput").value;
+      if (!pass) return showToast("أدخل كلمة المرور الحالية لتأكيد حذف الحساب.", "warn");
+      try {
+        const cred = EmailAuthProvider.credential(currentUser.email, pass);
+        await reauthenticateWithCredential(currentUser, cred);
+        const uid = currentUser.uid;
+        const uname = currentUserProfile?.username;
+        if (uname) await deleteDoc(doc(db, "usernames", uname)).catch(() => {});
+        await deleteDoc(doc(db, "users", uid)).catch(() => {});
+        await deleteUser(currentUser);
+        showToast("تم حذف حسابك نهائياً.", "info");
+        location.reload();
+      } catch (err) {
+        showToast("فشل حذف الحساب: " + err.message, "error");
+      }
+    };
+
+    window.applyCustomDualTheme = () => {
+      const c1 = document.getElementById("themeColor1").value;
+      const c2 = document.getElementById("themeColor2").value;
+      localStorage.setItem("nabd_accent1", c1);
+      localStorage.setItem("nabd_accent2", c2);
+      document.documentElement.style.setProperty("--accent-1", c1);
+      document.documentElement.style.setProperty("--accent-2", c2);
+      showToast("تم دمج اللونين وتطبيق الثيم!", "success");
+    };
+
+    window.applyWallpaperTheme = () => {
+      const url = document.getElementById("themeWallpaperUrl").value.trim();
+      if (!url) return;
+      localStorage.setItem("nabd_wallpaper", url);
+      document.documentElement.style.setProperty("--bg-wallpaper", `url('${url}')`);
+      showToast("تم تطبيق ثيم الخلفية المصورة!", "success");
+    };
+
+    window.resetThemeDefaults = () => {
+      localStorage.removeItem("nabd_accent1");
+      localStorage.removeItem("nabd_accent2");
+      localStorage.removeItem("nabd_wallpaper");
+      location.reload();
+    };
+
+    window.setLocalFont = (fontVal) => {
+      localStorage.setItem("nabd_font", fontVal);
+      document.documentElement.style.setProperty("--app-font", fontVal);
+      showToast("تم تغيير خط الموقع محلياً!", "success");
+    };
+
+    window.setAppLayout = (mode) => {
+      localStorage.setItem("nabd_layout", mode);
+      document.body.classList.remove("layout-classic", "layout-modern");
+      document.body.classList.add(`layout-${mode}`);
+      switchSettingsTab("layout");
+      showToast("تم تحديث شكل التصفح!", "success");
+    };
+
+    window.addGlobalBadWord = async () => {
+      if (!isSuperAdmin) return;
+      const w = document.getElementById("newBadWordInput").value.trim();
+      if (!w) return;
+      globalBadWords.push(w);
+      await setDoc(doc(db, "settings", "global_automod"), { words: globalBadWords }, { merge: true });
+      switchSettingsTab("automod");
+    };
+
+    window.removeGlobalBadWord = async (w) => {
+      if (!isSuperAdmin) return;
+      globalBadWords = globalBadWords.filter(x => x !== w);
+      await setDoc(doc(db, "settings", "global_automod"), { words: globalBadWords }, { merge: true });
+      switchSettingsTab("automod");
+    };
+
+    window.toggleMobileDrawer = (open) => {
+      const drawer = document.getElementById("channelsDrawer");
+      drawer.classList.toggle("translate-x-full", !open);
+    };
+  </script>
+</body>
+</html>
